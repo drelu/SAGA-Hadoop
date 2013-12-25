@@ -14,13 +14,13 @@ from optparse import OptionParser
 logging.basicConfig(level=logging.DEBUG)
 
 # For automatic Download and Installation
-HADOOP_DOWNLOAD_URL = "http://apache.linux-mirror.org//hadoop/common/hadoop-1.0.0/hadoop-1.0.0.tar.gz"
+HADOOP_DOWNLOAD_URL = "http://psg.mtu.edu/pub/apache/hadoop/common/hadoop-1.2.1/hadoop-1.2.1-bin.tar.gz"
 WORKING_DIRECTORY = os.path.join(os.getcwd(), "work")
 
 # For using an existing installation
 # HADOOP 0.22 - no webhdfs
 # HADOOP 1.0.0 - has support for webhdfs
-HADOOP_HOME=os.path.join(os.getcwd(), "work/hadoop-1.0.0")
+HADOOP_HOME=os.path.join(os.getcwd(), "work/hadoop-1.2.1")
 
 
 STOP=False

@@ -13,8 +13,8 @@ def main():
     
     try:
         # create a job service for Futuregrid's 'india' PBS cluster
-        #js = saga.job.Service("pbs+ssh://india")
-        js = saga.job.Service("fork://localhost")
+        js = saga.job.Service("pbs+ssh://india")
+        #js = saga.job.Service("fork://localhost")
 
         # describe our job
         jd = saga.job.Description()
@@ -35,21 +35,21 @@ def main():
         print "Starting Hadoop bootstrap job...\n"
         # run the job (submit the job to PBS)
         myjob.run()
-
-        print "**** Job ID    : %s" % (myjob.jobid)
+        jobid = myjob.get_id()
+        print "**** Job ID    : %s" % (jobid)
         print "**** Job State : %s" % (myjob.get_state())
 
         while True:
             state = myjob.get_state()
-            if state==saga.job.Job.Running:
+            if state=="Running":
                 if os.path.exists("work/started"):
-                    get_hadoop_config_data(str(myjob.jobid))
+                    get_hadoop_config_data(str(jobid))
                     break
             time.sleep(3)
 
 
 
-    except saga.Exception, ex:
+    except Exception, ex:
         print "An error occured: %s" % (str(ex))
 
 
