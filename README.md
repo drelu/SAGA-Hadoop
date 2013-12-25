@@ -1,15 +1,20 @@
-SAGA Hadoop
+# SAGA Hadoop
 
-Use SAGA to spawn an Hadoop Cluster within an HPC batch job.
+# Overview:
+
+Use [SAGA](http://saga-project.github.io/saga-python/) to spawn an Hadoop Cluster within an HPC batch job.
 
 Currently supported SAGA adaptors:
 
 - Fork
 - Torque
 
+# Usage
+
+<http://randomlydistributed.blogspot.com/2011/01/running-hadoop-10-on-distributed.html>
 
 
-Packages:
+# Packages:
 
 see hadoop1 for setting up a Hadoop 1.x.x cluster
 
