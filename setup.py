@@ -56,8 +56,8 @@ update_version()
     
 setup(name='SAGA-Hadoop',
       version=get_version(),
-      description='Using SAGA ',
-      author='Andre Luckow, et al.',
+      description='SAGA to launch an Hadoop cluster as a normal batch job on Torque clusters',
+      author='Andre Luckow',
       author_email='aluckow@cct.lsu.edu',
       url='https://github.com/drelu/saga-hadoop',
       classifiers = ['Development Status :: 5 - Production/Stable',                  

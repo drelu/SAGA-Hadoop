@@ -16,6 +16,6 @@ Currently supported SAGA adaptors:
 
 # Packages:
 
-see hadoop1 for setting up a Hadoop 1.x.x cluster
+see `hadoop1` for setting up a Hadoop 1.x.x cluster
 
-see hadoop2 for setting up a Hadoop 2.2.x cluster 
+see `hadoop2` for setting up a Hadoop 2.2.x cluster 
