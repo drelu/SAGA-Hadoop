@@ -7,21 +7,21 @@ import subprocess
 import pdb
 
 import logging
-logging.basicConfig(level=logging.ERROR)
+logging.basicConfig(level=logging.DEBUG)
 
 def main():
     
     try:
         # create a job service for Futuregrid's 'india' PBS cluster
-        #js = saga.job.Service("pbs+ssh://india")
-        js = saga.job.Service("fork://localhost")
+        js = saga.job.Service("pbs+ssh://india")
+        #js = saga.job.Service("fork://localhost")
 
         # describe our job
         jd = saga.job.Description()
         # resource requirements
         jd.total_cpu_count = 16   
         # environment, executable & arguments
-        executable = os.path.join(os.getcwd(), "hadoop2/bootstrap_hadoop2.py")
+        executable = os.path.join(os.getcwd(), "bootstrap_hadoop2.py")
         logging.debug("Run %s"%executable)
         jd.executable  = executable
         jd.arguments   = []
@@ -35,21 +35,21 @@ def main():
         print "Starting Hadoop bootstrap job...\n"
         # run the job (submit the job to PBS)
         myjob.run()
-
-        print "**** Job ID    : %s" % (myjob.jobid)
-        print "**** Job State : %s" % (myjob.get_state())
+        id = myjob.get_id()
+        #id = id[id.index("]-[")+3: len(id)-1]
+        print "**** Job: " + str(id) + " State : %s" % (myjob.get_state())
 
         while True:
             state = myjob.get_state()
-            if state==saga.job.Job.Running:
+            if state=="Running":
                 if os.path.exists("work/started"):
-                    get_hadoop_config_data(str(myjob.jobid))
+                    get_hadoop_config_data(id)
                     break
             time.sleep(3)
 
 
 
-    except saga.Exception, ex:
+    except Exception as ex:
         print "An error occured: %s" % (str(ex))
 
 
