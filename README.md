@@ -11,6 +11,11 @@ Currently supported SAGA adaptors:
 
 # Usage
 
+easy_install saga-hadoop
+
+
+
+
 <http://randomlydistributed.blogspot.com/2011/01/running-hadoop-10-on-distributed.html>
 
 
