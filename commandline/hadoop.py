@@ -78,7 +78,7 @@ class SAGAHadoopCLI(object):
         print "Allocated Resources for Hadoop cluster: " + hosts 
         print "HDFS Web Interface: http://%s:50070"% hosts[:hosts.find("/")]   
         print "\nTo use Hadoop set HADOOP_CONF_DIR: "
-        print "export HADOOP_CONF_DIR=%s"%(os.path.join(os.getcwd(), "work", self.get_most_current_job(), "conf")) 
+        print "export HADOOP_CONF_DIR=%s"%(os.path.join(os.getcwd(), "work", self.get_most_current_job(), "etc/hadoop")) 
         print "%s/bin/hadoop dfsadmin -report"%hadoop_home
         print ""     
     
