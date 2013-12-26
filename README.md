@@ -9,6 +9,11 @@ Currently supported SAGA adaptors:
 - Fork
 - Torque
 
+Requirements:
+
+	* PBS/Torque cluster
+	* Working directory should be on a shared filesystem
+
 By default SAGA-Hadoop deploys an Hadoop 2.2.0 YARN cluster. The cluster can be customized by adjusting the templates for the Hadoop configuration files in `core-site.xml`, `hdfs-site.xml`, `mapred-site.xml` and `yarn-site.xml` in the `hadoop2/bootstrap_hadoop2.py`.
 
 # Usage
