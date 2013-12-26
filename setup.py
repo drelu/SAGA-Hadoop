@@ -67,12 +67,12 @@ setup(name='SAGA-Hadoop',
                     'Topic :: Utilities',
                     ],
       platforms = ('Unix', 'Linux', 'Mac OS'),
-      packages=['hadoop1', 'hadoop2'],
+      packages=['hadoop1', 'hadoop2', "commandline"],
       include_package_data=True,
       # data files for easy_install
       
       install_requires=['uuid', 'radical.utils', 'saga-python' ],
       entry_points = {
-        'console_scripts': [ ]
-    }
+        'console_scripts': [ 'saga-hadoop=commandline.hadoop:main']        
+      }
 )

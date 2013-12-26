@@ -10,6 +10,7 @@ import hadoop1, hadoop2
 import saga
 import logging
 import time
+import subprocess
  
 SAGA_HADOOP_DIRECTORY="~/.hadoop"  
   
@@ -38,7 +39,7 @@ class SAGAHadoopCLI(object):
             arguments = ["-m", "hadoop2.bootstrap_hadoop2"] 
             logging.debug("Run %s Args: %s"%(executable, str(arguments)))
             jd.executable  = executable
-            jd.arguments   = []
+            jd.arguments   = arguments
             # output options
             jd.output = "hadoop_job.stdout"
             jd.error  = "hadoop_job.stderr"
@@ -57,13 +58,29 @@ class SAGAHadoopCLI(object):
                 state = myjob.get_state()
                 if state=="Running":
                     if os.path.exists("work/started"):
-                        get_hadoop_config_data(id)
+                        self.get_hadoop_config_data(id)
                         break
                 time.sleep(3)
         except Exception as ex:
             print "An error occured: %s" % (str(ex))
         
-                
+        
+    def get_hadoop_config_data(self, jobid):
+        pbs_id = jobid[jobid.find("-")+2:len(jobid)-1]
+        nodes = subprocess.check_output(["qstat", "-f", pbs_id])
+        hosts = "empty"
+        for i in nodes.split("\n"):
+            if i.find("exec_host")>0:
+                hosts = i[i.find("=")+1:].strip()
+    
+        hadoop_home=os.path.join(os.getcwd(), "work/hadoop-1.0.0")
+        print "HADOOP installation directory: %s"%hadoop_home
+        print "Allocated Resources for Hadoop cluster: " + hosts 
+        print "HDFS Web Interface: http://%s:50070"% hosts[:hosts.find("/")]   
+        print "\nTo use Hadoop set HADOOP_CONF_DIR: "
+        print "export HADOOP_CONF_DIR=%s"%(os.path.join(os.getcwd(), "work", get_most_current_job(), "conf")) 
+        print "%s/bin/hadoop dfsadmin -report"%hadoop_home
+        print ""            
 
     def cancel(self, pilot_url):
         pass
@@ -132,8 +149,9 @@ def main():
                               working_directory=parsed_arguments.working_directory, 
                               number_cores=parsed_arguments.number_cores, 
                               cores_per_node=parsed_arguments.cores_per_node)
+    
+    
         
 if __name__ == '__main__':
     main()
-    
     
