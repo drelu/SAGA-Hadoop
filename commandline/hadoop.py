@@ -41,8 +41,8 @@ class SAGAHadoopCLI(object):
             jd.executable  = executable
             jd.arguments   = arguments
             # output options
-            jd.output = "hadoop_job.stdout"
-            jd.error  = "hadoop_job.stderr"
+            jd.output =  os.path.join("hadoop_job.stdout")
+            jd.error  = os.path.join("hadoop_job.stderr")
             jd.working_directory=working_directory
             # create the job (state: New)
             myjob = js.create_job(jd)
@@ -78,9 +78,20 @@ class SAGAHadoopCLI(object):
         print "Allocated Resources for Hadoop cluster: " + hosts 
         print "HDFS Web Interface: http://%s:50070"% hosts[:hosts.find("/")]   
         print "\nTo use Hadoop set HADOOP_CONF_DIR: "
-        print "export HADOOP_CONF_DIR=%s"%(os.path.join(os.getcwd(), "work", get_most_current_job(), "conf")) 
+        print "export HADOOP_CONF_DIR=%s"%(os.path.join(os.getcwd(), "work", self.get_most_current_job(), "conf")) 
         print "%s/bin/hadoop dfsadmin -report"%hadoop_home
-        print ""            
+        print ""     
+    
+    def get_most_current_job(self):
+        dir = "work"
+        files = os.listdir(dir)
+        max = None
+        for i in files:
+            if i.startswith("hadoop-conf"):
+                t = os.path.getctime(os.path.join(dir,i))
+                if max == None or t>max[0]:
+                    max = (t, i)
+        return max[1]       
 
     def cancel(self, pilot_url):
         pass
@@ -128,7 +139,7 @@ def main():
     parser.add_argument('--version', action="store_true", default=False)    
     
     saga_hadoop_group = parser.add_argument_group('Manage SAGA Hadoop clusters')
-    saga_hadoop_group.add_argument('--resource', action="store", nargs=1, metavar="RESOURCE_URL", 
+    saga_hadoop_group.add_argument('--resource', action="store", nargs="?", metavar="RESOURCE_URL", 
                               help="submit a job to specified resource, e.g. fork://localhost",
                               default="fork://localhost")
     saga_hadoop_group.add_argument('--working_directory', action="store", nargs="?", metavar="WORKING_DIRECTORY", 
