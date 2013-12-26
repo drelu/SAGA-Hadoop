@@ -73,7 +73,7 @@ class SAGAHadoopCLI(object):
             if i.find("exec_host")>0:
                 hosts = i[i.find("=")+1:].strip()
     
-        hadoop_home=os.path.join(os.getcwd(), "work/hadoop-1.0.0")
+        hadoop_home=os.path.join(os.getcwd(), "work/hadoop-2.2.0")
         print "HADOOP installation directory: %s"%hadoop_home
         print "Allocated Resources for Hadoop cluster: " + hosts 
         print "HDFS Web Interface: http://%s:50070"% hosts[:hosts.find("/")]   
