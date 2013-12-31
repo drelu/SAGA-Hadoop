@@ -104,7 +104,7 @@ class HadoopBootstrap(object):
         for i in nodes:
             i.strip()
         f.close()    
-        return set(nodes)
+        return list(set(nodes))
 
 
     def configure_hadoop(self):
