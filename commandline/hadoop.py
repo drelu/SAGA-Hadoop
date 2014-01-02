@@ -66,17 +66,21 @@ class SAGAHadoopCLI(object):
         
         
     def get_hadoop_config_data(self, jobid):
+        hosts = "localhost/"
         pbs_id = jobid[jobid.find("-")+2:len(jobid)-1]
-        nodes = subprocess.check_output(["qstat", "-f", pbs_id])
-        hosts = "empty"
-        for i in nodes.split("\n"):
-            if i.find("exec_host")>0:
-                hosts = i[i.find("=")+1:].strip()
-    
+        try:
+            nodes = subprocess.check_output(["qstat", "-f", pbs_id])
+            for i in nodes.split("\n"):
+                if i.find("exec_host")>0:
+                    hosts = i[i.find("=")+1:].strip()
+        except:
+            pass
         hadoop_home=os.path.join(os.getcwd(), "work/hadoop-2.2.0")
         print "HADOOP installation directory: %s"%hadoop_home
         print "Allocated Resources for Hadoop cluster: " + hosts 
+        print "YARN Web Interface: http://%s:8088"% hosts[:hosts.find("/")]
         print "HDFS Web Interface: http://%s:50070"% hosts[:hosts.find("/")]   
+        print "(please allow some time until the Hadoop cluster is completely initialized)"
         print "\nTo use Hadoop set HADOOP_CONF_DIR: "
         print "export HADOOP_CONF_DIR=%s"%(os.path.join(os.getcwd(), "work", self.get_most_current_job(), "etc/hadoop")) 
         print "%s/bin/hadoop dfsadmin -report"%hadoop_home
