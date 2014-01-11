@@ -108,19 +108,14 @@ class Hadoop2Bootstrap(object):
     <description>In case you do not want to use the default scheduler</description>
   </property>
   <property>
+    <name>yarn.resourcemanager.hostname</name>
+    <value>%s</value>
+    <description>In case you do not want to use the default scheduler</description>
+  </property>
+  <property>
     <name>yarn.nodemanager.local-dirs</name>
     <value></value>
     <description>the local directories used by the nodemanager</description>
-  </property>
-  <property>
-    <name>yarn.nodemanager.remote-app-log-dir</name>
-    <value>/app-logs</value>
-    <description>directory on hdfs where the application logs are moved to </description>
-  </property>
-  <property>
-    <name>yarn.nodemanager.log-dirs</name>
-    <value></value>
-    <description>the directories used by Nodemanagers as log directories</description>
   </property>
   <property>
     <name>yarn.nodemanager.aux-services</name>
@@ -132,7 +127,7 @@ class Hadoop2Bootstrap(object):
     <value>3600</value>
     <description>delay deletion of user cache </description>
   </property>
-</configuration>"""
+</configuration>"""%(hostname)
     
     
     def get_pbs_allocated_nodes(self):
@@ -176,7 +171,7 @@ class Hadoop2Bootstrap(object):
         mapred_site_file.close() 
         
         yarn_site_file = open(os.path.join(self.job_conf_dir, "yarn-site.xml"), "w")
-        yarn_site_file.write(self.get_mapred_site_xml(master))
+        yarn_site_file.write(self.get_yarn_site_xml(master))
         yarn_site_file.close() 
         
 
