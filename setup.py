@@ -39,7 +39,7 @@ def update_version():
     f = open(fn, "w")
     f.write(ver)
     f.close()
-    print "BigJob VERSION: '%s'" % ver
+    print "SAGA-Hadoop VERSION: '%s'" % ver
 
 
 def get_version():
@@ -71,7 +71,7 @@ setup(name='SAGA-Hadoop',
       include_package_data=True,
       # data files for easy_install
       
-      install_requires=['uuid', 'radical.utils', 'saga-python' ],
+      install_requires=['uuid', 'radical.utils', 'saga-python', 'argparse' ],
       entry_points = {
         'console_scripts': [ 'saga-hadoop=commandline.hadoop:main']        
       }
