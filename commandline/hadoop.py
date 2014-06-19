@@ -86,8 +86,10 @@ class SAGAHadoopCLI(object):
         print "(please allow some time until the Hadoop cluster is completely initialized)"
         print "\nTo use Hadoop set HADOOP_CONF_DIR: "
         print "export HADOOP_CONF_DIR=%s"%(os.path.join(os.getcwd(), "work", self.get_most_current_job(), "etc/hadoop")) 
-        print "export PATH=%s/bin:$PATH"%(hadoop_home)) 
-        print "hadoop dfsadmin -report"%hadoop_home
+        print "export HADOOP_HOME=%s"%(hadoop_home) 
+        print "export PATH=%s/bin:$PATH"%(hadoop_home) 
+        print "\nSmoke Test:"
+        print "hadoop dfsadmin -report"
         print ""     
     
     def get_most_current_job(self):
