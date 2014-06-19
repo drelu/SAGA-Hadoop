@@ -9,6 +9,7 @@ import uuid
 import shutil
 import time
 import signal
+import socket
 from optparse import OptionParser
 
 logging.basicConfig(level=logging.DEBUG)
@@ -131,6 +132,7 @@ class Hadoop2Bootstrap(object):
     
     
     def get_pbs_allocated_nodes(self):
+        print "Init PBS"
         pbs_node_file = os.environ.get("PBS_NODEFILE")    
         if pbs_node_file == None:
             return ["localhost"]
@@ -142,11 +144,34 @@ class Hadoop2Bootstrap(object):
         return list(set(nodes))
 
 
+    def get_sge_allocated_nodes(self):
+        print "Init SGE"
+        sge_node_file = os.environ.get("PE_HOSTFILE")    
+        if sge_node_file == None:
+            return ["localhost"]
+        f = open(sge_node_file)
+        sgenodes = f.readlines()
+        f.close() 
+        nodes = []
+        for i in sgenodes:    
+            columns = i.split()                
+            try:
+                for j in range(0, int(columns[1])):
+                    print("add host: " + columns[0].strip())
+                    nodes.append(columns[0]+"\n")
+            except:
+                    pass
+        nodes.reverse()
+        return list(set(nodes))
+
+
     def configure_hadoop(self):
         logging.debug("Copy config from " + HADOOP_CONF_DIR + " to: " + self.job_conf_dir)
         shutil.copytree(HADOOP_CONF_DIR, self.job_conf_dir)
-        
-        nodes = self.get_pbs_allocated_nodes()
+        if(os.environ.get("PBS_NODEFILE")!=None and os.environ.get("PBS_NODEFILE")!=""):
+            nodes=self.get_pbs_allocated_nodes()
+        else:
+            nodes=self.get_sge_allocated_nodes() 
         if nodes!=None:
             master = nodes[0].strip()
             master_file = open(os.path.join(self.job_conf_dir, "masters"), "w")
@@ -181,14 +206,16 @@ class Hadoop2Bootstrap(object):
             self.set_env()    
             format_command = os.path.join(HADOOP_HOME, "bin/hadoop") + " --config " + self.job_conf_dir + " namenode -format"
             logging.debug("Execute: %s"%format_command)
+            os.system("rm -rf /tmp/hadoop-*")           
             os.system(format_command)        
+
         else:
             logging.debug("Don't format namenode. Reconnect to existing namenode")
 
         self.set_env()    
         start_command = os.path.join(HADOOP_HOME, "sbin/start-all.sh")
         logging.debug("Execute: %s"%start_command)
-        os.system(start_command)
+        os.system(". ~/.bashrc & " + start_command)
         print("Hadoop started, please set HADOOP_CONF_DIR to:\nexport HADOOP_CONF_DIR=%s"%self.job_conf_dir)
         
         
@@ -221,8 +248,8 @@ class Hadoop2Bootstrap(object):
         os.environ["HADOOP_CONF_DIR"]=self.job_conf_dir  
         logging.debug("Export HADOOP_LOG_DIR to %s"%self.job_log_dir)
         os.environ["HADOOP_LOG_DIR"]=self.job_log_dir
-    
-    
+
+
 #########################################################
 #  main                                                 #
 #########################################################
@@ -242,6 +269,7 @@ if __name__ == "__main__" :
     parser.add_option("-c", "--clean", action="store_true", dest="clean",
                   help="clean HDFS datanodes after termination")
    
+    logging.debug("Bootstrap Hadoop on " + socket.gethostname())
     
     if not os.path.exists(HADOOP_HOME):
         try:
@@ -249,6 +277,7 @@ if __name__ == "__main__" :
         except:
             pass
         
+
         download_destination = os.path.join(WORKING_DIRECTORY,"hadoop.tar.gz")
         if os.path.exists(download_destination)==False:
             logging.debug("Download: %s to %s"%(HADOOP_DOWNLOAD_URL, download_destination))
