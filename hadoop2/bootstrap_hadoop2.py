@@ -10,12 +10,13 @@ import shutil
 import time
 import signal
 import socket
+import hostlist
 from optparse import OptionParser
 
 logging.basicConfig(level=logging.DEBUG)
 
 # For automatic Download and Installation
-VERSION="2.2.0"
+VERSION="2.6.0"
 HADOOP_DOWNLOAD_URL = "http://apache.osuosl.org/hadoop/common/hadoop-"+ VERSION + "/hadoop-"+ VERSION + ".tar.gz"
 WORKING_DIRECTORY = os.path.join(os.getcwd(), "work")
 
@@ -164,12 +165,31 @@ class Hadoop2Bootstrap(object):
         nodes.reverse()
         return list(set(nodes))
 
+    def get_slurm_allocated_nodes(self):
+        print("Init nodefile from SLURM_NODELIST")
+        hosts = os.environ.get("SLURM_NODELIST") 
+        if hosts == None:
+            self.init_local()
+            return
+
+        hosts=hostlist.expand_hostlist(hosts)
+        number_cpus_per_node = 1
+        if os.environ.get("SLURM_CPUS_ON_NODE")!=None:
+            number_cpus_per_node=int(os.environ.get("SLURM_CPUS_ON_NODE"))
+        freenodes = []
+        for h in hosts:
+            #for i in range(0, number_cpus_per_node):
+            freenodes.append((h + "\n"))
+        return list(set(freenodes))
+
 
     def configure_hadoop(self):
         logging.debug("Copy config from " + HADOOP_CONF_DIR + " to: " + self.job_conf_dir)
         shutil.copytree(HADOOP_CONF_DIR, self.job_conf_dir)
         if(os.environ.get("PBS_NODEFILE")!=None and os.environ.get("PBS_NODEFILE")!=""):
             nodes=self.get_pbs_allocated_nodes()
+        elif (os.environ.get("SLURM_NODELIST")!=None):
+            nodes=self.get_slurm_allocated_nodes()
         else:
             nodes=self.get_sge_allocated_nodes() 
         if nodes!=None:

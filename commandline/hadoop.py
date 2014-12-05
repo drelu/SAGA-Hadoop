@@ -25,7 +25,9 @@ class SAGAHadoopCLI(object):
                           working_directory=os.getcwd(),
                           number_cores=1,
                           cores_per_node=1,
-			  spmd_variation=None
+			              spmd_variation=None,
+                          queue=None,
+                          walltime=None
                      ):
         
         try:
@@ -45,8 +47,12 @@ class SAGAHadoopCLI(object):
             jd.output =  os.path.join("hadoop_job.stdout")
             jd.error  = os.path.join("hadoop_job.stderr")
             jd.working_directory=working_directory
+            jd.queue=queue
             if spmd_variation!=None:
                 jd.spmd_variation=spmd_variation
+            if walltime!=None:
+                jd.wall_time_limit=walltime
+
             # create the job (state: New)
             myjob = js.create_job(jd)
     
@@ -78,7 +84,7 @@ class SAGAHadoopCLI(object):
                     hosts = i[i.find("=")+1:].strip()
         except:
             pass
-        hadoop_home=os.path.join(os.getcwd(), "work/hadoop-2.2.0")
+        hadoop_home=os.path.join(os.getcwd(), "work/hadoop-2.6.0")
         print "HADOOP installation directory: %s"%hadoop_home
         #print "Allocated Resources for Hadoop cluster: " + hosts 
         #print "YARN Web Interface: http://%s:8088"% hosts[:hosts.find("/")]
@@ -154,11 +160,17 @@ def main():
                               default="fork://localhost")
     saga_hadoop_group.add_argument('--working_directory', action="store", nargs="?", metavar="WORKING_DIRECTORY", 
                               help="submit a job to specified resource, e.g. fork://localhost",
-                              default=None)    
+                              default=os.getcwd())    
         
     saga_hadoop_group.add_argument('--spmd_variation', action="store", nargs="?", metavar="SPMD_VARIATION", 
                               help="Parallel environment, e.g. openmpi",
-                              default=os.getcwd())    
+                              default=None)    
+    saga_hadoop_group.add_argument('--queue', action="store", nargs="?", metavar="QUEUE", 
+                              help="Queue Name",
+                              default=None)    
+    saga_hadoop_group.add_argument('--walltime', action="store", nargs="?", metavar="WALLTIME", 
+                              help="Wall time limit",
+                              default=None)    
 
     saga_hadoop_group.add_argument('--number_cores', default="1", nargs="?")
     saga_hadoop_group.add_argument('--cores_per_node',  default="1", nargs="?")    
@@ -174,7 +186,9 @@ def main():
                               working_directory=parsed_arguments.working_directory, 
                               number_cores=parsed_arguments.number_cores, 
                               cores_per_node=parsed_arguments.cores_per_node,
-			      spmd_variation=parsed_arguments.spmd_variation)
+			                  spmd_variation=parsed_arguments.spmd_variation,
+                              queue=parsed_arguments.queue,
+                              walltime=parsed_arguments.walltime)
     
     
         

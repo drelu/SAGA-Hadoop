@@ -53,7 +53,7 @@ def get_version():
     return version    
 
     
-update_version()
+#update_version()
     
 setup(name='SAGA-Hadoop',
       version=get_version(),
@@ -70,8 +70,7 @@ setup(name='SAGA-Hadoop',
       packages=['hadoop1', 'hadoop2', "commandline"],
       include_package_data=True,
       # data files for easy_install
-      
-      install_requires=['uuid', 'radical.utils', 'saga-python', 'argparse' ],
+      install_requires=['uuid', 'radical.utils', 'saga-python', 'argparse', "python-hostlist" ],
       entry_points = {
         'console_scripts': [ 'saga-hadoop=commandline.hadoop:main']        
       }
