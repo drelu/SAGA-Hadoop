@@ -11,6 +11,7 @@ import saga
 import logging
 import time
 import subprocess
+import re
  
 SAGA_HADOOP_DIRECTORY="~/.hadoop"  
   
@@ -97,6 +98,19 @@ class SAGAHadoopCLI(object):
         print "\nSmoke Test:"
         print "hadoop dfsadmin -report"
         print ""     
+        print "Namenode Web URL: http://" + self.get_namenode_host() + ":50070"    
+        print "YARN Web URL: http://" + self.get_namenode_host() + ":8088"    
+        print ""     
+
+    def get_namenode_host(self):
+        core_site=open(os.path.join(os.getcwd(), "work", 
+                                    self.get_most_current_job(), 
+                                    "etc/hadoop/core-site.xml"), "r")
+        core_site_content=core_site.read()
+        m = re.search("(?<=<value>hdfs://)(.*):.*(?=</value>)", core_site_content)
+        if m:
+            return m.group(1)
+        return None
     
     def get_most_current_job(self):
         dir = "work"
@@ -186,7 +200,7 @@ def main():
                               working_directory=parsed_arguments.working_directory, 
                               number_cores=parsed_arguments.number_cores, 
                               cores_per_node=parsed_arguments.cores_per_node,
-			                  spmd_variation=parsed_arguments.spmd_variation,
+                              spmd_variation=parsed_arguments.spmd_variation,
                               queue=parsed_arguments.queue,
                               walltime=parsed_arguments.walltime)
     

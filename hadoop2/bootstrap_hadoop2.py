@@ -67,7 +67,7 @@ class Hadoop2Bootstrap(object):
     <configuration>
          <property>
              <name>dfs.replication</name>
-             <value>1</value>
+             <value>3</value>
          </property>
          <property>
              <name>dfs.name.dir</name>
@@ -129,6 +129,18 @@ class Hadoop2Bootstrap(object):
     <value>3600</value>
     <description>delay deletion of user cache </description>
   </property>
+  <property>
+    <name>yarn.resourcemanager.resource-tracker.address</name>
+    <value>${yarn.resourcemanager.hostname}:10031</value>
+  </property>
+  <property>
+    <name>yarn.nodemanager.resource.memory-mb</name>
+    <value>16384</value>
+  </property>
+  <property>
+    <name>yarn.nodemanager.resource.cpu-vcores</name>
+    <value>16</value>
+  </property>
 </configuration>"""%(hostname)
     
     
@@ -172,6 +184,7 @@ class Hadoop2Bootstrap(object):
             self.init_local()
             return
 
+        print "***** Hosts: " + str(hosts) 
         hosts=hostlist.expand_hostlist(hosts)
         number_cpus_per_node = 1
         if os.environ.get("SLURM_CPUS_ON_NODE")!=None:
@@ -268,6 +281,7 @@ class Hadoop2Bootstrap(object):
         os.environ["HADOOP_CONF_DIR"]=self.job_conf_dir  
         logging.debug("Export HADOOP_LOG_DIR to %s"%self.job_log_dir)
         os.environ["HADOOP_LOG_DIR"]=self.job_log_dir
+        os.system("pkill -9 java") 
 
 
 #########################################################
