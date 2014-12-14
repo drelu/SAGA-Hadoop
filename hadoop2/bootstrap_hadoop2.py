@@ -88,6 +88,10 @@ class Hadoop2Bootstrap(object):
              <name>dfs.webhdfs.enabled</name>
              <value>true</value>
          </property>         
+         <property>
+             <name>dfs.datanode.max.locked.memory</name>
+             <value>25769803776</value>
+         </property>         
     </configuration>"""%(name_dir)
     
     
