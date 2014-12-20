@@ -28,7 +28,8 @@ class SAGAHadoopCLI(object):
                           cores_per_node=1,
 			              spmd_variation=None,
                           queue=None,
-                          walltime=None
+                          walltime=None,
+                          project=None
                      ):
         
         try:
@@ -49,6 +50,9 @@ class SAGAHadoopCLI(object):
             jd.error  = os.path.join("hadoop_job.stderr")
             jd.working_directory=working_directory
             jd.queue=queue
+            if project!=None:
+                jd.project=project
+            #jd.environment =
             if spmd_variation!=None:
                 jd.spmd_variation=spmd_variation
             if walltime!=None:
@@ -188,6 +192,7 @@ def main():
 
     saga_hadoop_group.add_argument('--number_cores', default="1", nargs="?")
     saga_hadoop_group.add_argument('--cores_per_node',  default="1", nargs="?")    
+    saga_hadoop_group.add_argument('--project', action="store", nargs="?", metavar="PROJECT", help="Allocation id for project", default=None)
         
     parsed_arguments = parser.parse_args()    
     
@@ -202,7 +207,8 @@ def main():
                               cores_per_node=parsed_arguments.cores_per_node,
                               spmd_variation=parsed_arguments.spmd_variation,
                               queue=parsed_arguments.queue,
-                              walltime=parsed_arguments.walltime)
+                              walltime=parsed_arguments.walltime,
+                              project=parsed_arguments.project)
     
     
         
