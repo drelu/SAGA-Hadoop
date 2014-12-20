@@ -175,6 +175,7 @@ class SparkBootstrap(object):
     def set_env(self):
         logging.debug("Export SPARK_CONF_DIR to %s"%self.job_conf_dir)
         os.environ["SPARK_CONF_DIR"]=self.job_conf_dir
+        os.environ["SPARK_MASTER_IP"]=socket.gethostname().split(".")[0]
         os.system("pkill -9 java")
 
 
