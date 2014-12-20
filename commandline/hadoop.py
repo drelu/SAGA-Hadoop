@@ -11,6 +11,7 @@ import saga
 import logging
 import time
 import subprocess
+import re
  
 SAGA_HADOOP_DIRECTORY="~/.hadoop"  
   
@@ -25,7 +26,10 @@ class SAGAHadoopCLI(object):
                           working_directory=os.getcwd(),
                           number_cores=1,
                           cores_per_node=1,
-			  spmd_variation=None
+			              spmd_variation=None,
+                          queue=None,
+                          walltime=None,
+                          project=None
                      ):
         
         try:
@@ -45,8 +49,15 @@ class SAGAHadoopCLI(object):
             jd.output =  os.path.join("hadoop_job.stdout")
             jd.error  = os.path.join("hadoop_job.stderr")
             jd.working_directory=working_directory
+            jd.queue=queue
+            if project!=None:
+                jd.project=project
+            #jd.environment =
             if spmd_variation!=None:
                 jd.spmd_variation=spmd_variation
+            if walltime!=None:
+                jd.wall_time_limit=walltime
+
             # create the job (state: New)
             myjob = js.create_job(jd)
     
@@ -78,7 +89,7 @@ class SAGAHadoopCLI(object):
                     hosts = i[i.find("=")+1:].strip()
         except:
             pass
-        hadoop_home=os.path.join(os.getcwd(), "work/hadoop-2.2.0")
+        hadoop_home=os.path.join(os.getcwd(), "work/hadoop-2.6.0")
         print "HADOOP installation directory: %s"%hadoop_home
         #print "Allocated Resources for Hadoop cluster: " + hosts 
         #print "YARN Web Interface: http://%s:8088"% hosts[:hosts.find("/")]
@@ -91,6 +102,19 @@ class SAGAHadoopCLI(object):
         print "\nSmoke Test:"
         print "hadoop dfsadmin -report"
         print ""     
+        print "Namenode Web URL: http://" + self.get_namenode_host() + ":50070"    
+        print "YARN Web URL: http://" + self.get_namenode_host() + ":8088"    
+        print ""     
+
+    def get_namenode_host(self):
+        core_site=open(os.path.join(os.getcwd(), "work", 
+                                    self.get_most_current_job(), 
+                                    "etc/hadoop/core-site.xml"), "r")
+        core_site_content=core_site.read()
+        m = re.search("(?<=<value>hdfs://)(.*):.*(?=</value>)", core_site_content)
+        if m:
+            return m.group(1)
+        return None
     
     def get_most_current_job(self):
         dir = "work"
@@ -154,27 +178,41 @@ def main():
                               default="fork://localhost")
     saga_hadoop_group.add_argument('--working_directory', action="store", nargs="?", metavar="WORKING_DIRECTORY", 
                               help="submit a job to specified resource, e.g. fork://localhost",
-                              default=None)    
+                              default=os.getcwd())    
         
     saga_hadoop_group.add_argument('--spmd_variation', action="store", nargs="?", metavar="SPMD_VARIATION", 
                               help="Parallel environment, e.g. openmpi",
                               default=None)
+    saga_hadoop_group.add_argument('--queue', action="store", nargs="?", metavar="QUEUE", 
+                              help="Queue Name",
+                              default=None)    
+    saga_hadoop_group.add_argument('--walltime', action="store", nargs="?", metavar="WALLTIME", 
+                              help="Wall time limit",
+                              default=None)    
 
     saga_hadoop_group.add_argument('--number_cores', default="1", nargs="?")
     saga_hadoop_group.add_argument('--cores_per_node',  default="1", nargs="?")    
-        
+    saga_hadoop_group.add_argument('--project', action="store", nargs="?", metavar="PROJECT", help="Allocation id for project", default=None)
+
+    saga_hadoop_group.add_argument('--framework', action="store", nargs="?", metavar="FRAMEWORK", help="Framework to start: [hadoop, spark]", default="hadoop")
+
     parsed_arguments = parser.parse_args()    
     
     
     
     if parsed_arguments.version==True:
         app.version()
+    elif parsed_arguments.framework=="spark":
+        pass
     else:
         app.submit_hadoop_job(resource_url=parsed_arguments.resource, 
                               working_directory=parsed_arguments.working_directory, 
                               number_cores=parsed_arguments.number_cores, 
                               cores_per_node=parsed_arguments.cores_per_node,
-			      spmd_variation=parsed_arguments.spmd_variation)
+                              spmd_variation=parsed_arguments.spmd_variation,
+                              queue=parsed_arguments.queue,
+                              walltime=parsed_arguments.walltime,
+                              project=parsed_arguments.project)
     
     
         
