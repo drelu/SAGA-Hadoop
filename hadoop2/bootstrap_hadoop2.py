@@ -98,10 +98,22 @@ class Hadoop2Bootstrap(object):
     def get_mapred_site_xml(self,hostname):
         return """<?xml version="1.0"?>
     <configuration>
-         <property>
+         <!--property>
              <name>mapred.job.tracker</name>
              <value>%s:9001</value>
+         </property-->
+         <property>
+             <name>mapreduce.framework.name</name>
+             <value>yarn</value>
          </property>
+         <property>
+           <name>mapreduce.map.java.opts</name>
+           <value>-Xmx1792m</value>
+        </property>
+         <property>
+           <name>mapreduce.reduce.java.opts</name>
+           <value>-Xmx1792m</value>
+        </property>
     </configuration>"""%(hostname)
     
     
@@ -116,11 +128,10 @@ class Hadoop2Bootstrap(object):
   <property>
     <name>yarn.resourcemanager.hostname</name>
     <value>%s</value>
-    <description>In case you do not want to use the default scheduler</description>
   </property>
   <property>
     <name>yarn.nodemanager.local-dirs</name>
-    <value></value>
+    <value>/tmp</value>
     <description>the local directories used by the nodemanager</description>
   </property>
   <property>
@@ -135,11 +146,15 @@ class Hadoop2Bootstrap(object):
   </property>
   <property>
     <name>yarn.resourcemanager.resource-tracker.address</name>
-    <value>${yarn.resourcemanager.hostname}:10031</value>
+    <value>${yarn.resourcemanager.hostname}:11031</value>
   </property>
   <property>
     <name>yarn.nodemanager.resource.memory-mb</name>
     <value>16384</value>
+  </property>
+  <property>
+    <name>yarn.scheduler.minimum-allocation-mb</name>
+    <value>2048</value>
   </property>
   <property>
     <name>yarn.nodemanager.resource.cpu-vcores</name>
@@ -210,7 +225,8 @@ class Hadoop2Bootstrap(object):
         else:
             nodes=self.get_sge_allocated_nodes() 
         if nodes!=None:
-            master = nodes[0].strip()
+            #master = nodes[0].strip()
+            master = socket.gethostname()
             master_file = open(os.path.join(self.job_conf_dir, "masters"), "w")
             master_file.write(master) 
             master_file.close()
@@ -239,6 +255,9 @@ class Hadoop2Bootstrap(object):
 
     def start_hadoop(self):
         logging.debug("Start Hadoop")    
+        os.system("killall -s 9 java") 
+        os.system("pkill -9 java") 
+        time.sleep(5)
         if not os.environ.has_key("HADOOP_CONF_DIR") or os.path.exists(os.environ["HADOOP_CONF_DIR"])==False:
             self.set_env()    
             format_command = os.path.join(HADOOP_HOME, "bin/hadoop") + " --config " + self.job_conf_dir + " namenode -format"
