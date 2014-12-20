@@ -158,7 +158,7 @@ def main():
         
     saga_hadoop_group.add_argument('--spmd_variation', action="store", nargs="?", metavar="SPMD_VARIATION", 
                               help="Parallel environment, e.g. openmpi",
-                              default=os.getcwd())    
+                              default=None)
 
     saga_hadoop_group.add_argument('--number_cores', default="1", nargs="?")
     saga_hadoop_group.add_argument('--cores_per_node',  default="1", nargs="?")    
