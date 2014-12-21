@@ -72,15 +72,16 @@ setup(name='SAGA-Hadoop',
       platforms = ('Unix', 'Linux', 'Mac OS'),
       include_package_data = True,
       package_dir = {'':'.'},
-      packages=['hadoop1', 'hadoop2', 'hadoop2.configs.default',
-                'hadoop2.configs.default',
-                'hadoop2.configs.stampede',
-                'hadoop2.configs.gordon',
-                "spark", "commandline"],
+      packages=find_packages(),
+            # ['hadoop1', 'hadoop2', 'hadoop2.configs.default',
+            #     'hadoop2.configs.default',
+            #     'hadoop2.configs.stampede',
+            #     'hadoop2.configs.gordon',
+            #     "spark", "commandline"],
 
       # data files for easy_install
       package_data= {'': ['*.xml']},
-      install_requires=['uuid', 'radical.utils', 'saga-python', 'argparse', "python-hostlist" ],
+      install_requires=['uuid', 'radical.utils', 'saga-python', 'argparse', "python-hostlist", "setuptools-git" ],
       entry_points = {
         'console_scripts': [ 'saga-hadoop=commandline.hadoop:main']        
       }
