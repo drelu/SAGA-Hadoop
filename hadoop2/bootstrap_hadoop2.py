@@ -74,12 +74,8 @@ class Hadoop2Bootstrap(object):
     #          <value>%s</value>
     #      </property>
     # </configuration>"""%(hostname,HADOOP_TMP_DIR)
-<<<<<<< HEAD
 
 
-=======
-    
->>>>>>> 3c929a0947a8131c2af17372de182dcb44e4cbd9
     def get_hdfs_site_xml(self, hostname, name_dir):
         return """<?xml version="1.0"?>
     <?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
