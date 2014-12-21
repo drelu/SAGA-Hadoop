@@ -37,8 +37,9 @@ def handler(signum, frame):
 class Hadoop2Bootstrap(object):
 
 
-    def __init__(self, working_directory):
+    def __init__(self, working_directory, hostname):
         self.working_directory=working_directory
+        self.hostname=hostname
         self.jobid = "hadoop-conf-"+str(uuid.uuid1())
         self.job_working_directory = os.path.join(WORKING_DIRECTORY, self.jobid)
         self.job_conf_dir = os.path.join(self.job_working_directory, "etc/hadoop/")

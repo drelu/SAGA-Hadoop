@@ -38,4 +38,23 @@ Some Blog Posts about SAGA-Hadoop:
 
 see `hadoop1` for setting up a Hadoop 1.x.x cluster
 
-see `hadoop2` for setting up a Hadoop 2.2.x cluster 
+see `hadoop2` for setting up a Hadoop 2.6.x cluster
+ 
+see `spark` for setting up a Spark 1.2 cluster
+
+
+# Examples:
+
+
+***Stampede:***
+
+    saga-hadoop --resource=slurm://localhost --queue=normal --walltime=239 --number_cores=256 --project=TG-MCB090174
+
+
+***Gordon:***
+
+    saga-hadoop --resource=pbs://localhost --walltime=59 --number_cores=16 --project=TG-CCR140028 --framework=spark
+    
+    
+
+
