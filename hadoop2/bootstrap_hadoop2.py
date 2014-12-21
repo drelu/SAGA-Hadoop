@@ -231,7 +231,7 @@ class Hadoop2Bootstrap(object):
             nodes=self.get_sge_allocated_nodes() 
         if nodes!=None:
             #master = nodes[0].strip()
-            master = socket.gethostname()
+            master = socket.gethostname().split(".")[0]
             master_file = open(os.path.join(self.job_conf_dir, "masters"), "w")
             master_file.write(master) 
             master_file.close()
