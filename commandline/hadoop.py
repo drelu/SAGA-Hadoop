@@ -32,7 +32,8 @@ class SAGAHadoopCLI(object):
                           spmd_variation=None,
                           queue=None,
                           walltime=None,
-                          project=None
+                          project=None,
+                          config_name="default"
     ):
 
         try:
@@ -106,7 +107,8 @@ class SAGAHadoopCLI(object):
 			              spmd_variation=None,
                           queue=None,
                           walltime=None,
-                          project=None
+                          project=None,
+                          config_name="default"
                      ):
         
         try:
@@ -118,7 +120,7 @@ class SAGAHadoopCLI(object):
             jd.total_cpu_count = int(number_cores)
             # environment, executable & arguments
             executable = "python"
-            arguments = ["-m", "hadoop2.bootstrap_hadoop2"] 
+            arguments = ["-m", "hadoop2.bootstrap_hadoop2", "-n", config_name]
             logging.debug("Run %s Args: %s"%(executable, str(arguments)))
             jd.executable  = executable
             jd.arguments   = arguments
@@ -272,6 +274,7 @@ def main():
     saga_hadoop_group.add_argument('--project', action="store", nargs="?", metavar="PROJECT", help="Allocation id for project", default=None)
 
     saga_hadoop_group.add_argument('--framework', action="store", nargs="?", metavar="FRAMEWORK", help="Framework to start: [hadoop, spark]", default="hadoop")
+    saga_hadoop_group.add_argument("-n", "--config_name", action="store", nargs="?", metavar="CONFIG_NAME", help="Name of config for host", default="default")
 
     parsed_arguments = parser.parse_args()    
     
@@ -287,7 +290,8 @@ def main():
                               spmd_variation=parsed_arguments.spmd_variation,
                               queue=parsed_arguments.queue,
                               walltime=parsed_arguments.walltime,
-                              project=parsed_arguments.project)
+                              project=parsed_arguments.project,
+                              config_name=parsed_arguments.config_name)
     else:
         app.submit_hadoop_job(resource_url=parsed_arguments.resource, 
                               working_directory=parsed_arguments.working_directory, 
@@ -296,7 +300,8 @@ def main():
                               spmd_variation=parsed_arguments.spmd_variation,
                               queue=parsed_arguments.queue,
                               walltime=parsed_arguments.walltime,
-                              project=parsed_arguments.project)
+                              project=parsed_arguments.project,
+                              config_name=parsed_arguments.config_name)
     
     
         

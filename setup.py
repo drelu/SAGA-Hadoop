@@ -3,7 +3,7 @@
 import os
 import sys
 
-from setuptools import setup
+from setuptools import setup, find_packages
 import subprocess
 
 try:
@@ -50,16 +50,19 @@ def get_version():
         f.close()
     except EnvironmentError:
         return "-1"
-    return version    
+    return version
+
+def create_manifest():
+    pass
 
     
 #update_version()
     
 setup(name='SAGA-Hadoop',
       version=get_version(),
-      description='SAGA to launch an Hadoop cluster as a normal batch job on Torque clusters',
+      description='SAGA to launch an Hadoop cluster as a normal batch job on Torque/PBS/SLURM clusters',
       author='Andre Luckow',
-      author_email='aluckow@cct.lsu.edu',
+      author_email='aluckow@clemson.edu',
       url='https://github.com/drelu/saga-hadoop',
       classifiers = ['Development Status :: 5 - Production/Stable',                  
                     'Programming Language :: Python',
@@ -67,9 +70,16 @@ setup(name='SAGA-Hadoop',
                     'Topic :: Utilities',
                     ],
       platforms = ('Unix', 'Linux', 'Mac OS'),
-      packages=['hadoop1', 'hadoop2', "spark", "commandline"],
-      include_package_data=True,
+      include_package_data = True,
+      package_dir = {'':'.'},
+      packages=['hadoop1', 'hadoop2', 'hadoop2.configs.default',
+                'hadoop2.configs.default',
+                'hadoop2.configs.stampede',
+                'hadoop2.configs.gordon',
+                "spark", "commandline"],
+
       # data files for easy_install
+      package_data= {'': ['*.xml']},
       install_requires=['uuid', 'radical.utils', 'saga-python', 'argparse', "python-hostlist" ],
       entry_points = {
         'console_scripts': [ 'saga-hadoop=commandline.hadoop:main']        

@@ -12,6 +12,7 @@ import signal
 import socket
 import hostlist
 from optparse import OptionParser
+import pkg_resources
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -38,8 +39,9 @@ def handler(signum, frame):
 class Hadoop2Bootstrap(object):
 
 
-    def __init__(self, working_directory):
+    def __init__(self, working_directory, config_name="default"):
         self.working_directory=working_directory
+        self.config_name=config_name
         self.jobid = "hadoop-conf-"+str(uuid.uuid1())
         self.job_working_directory = os.path.join(WORKING_DIRECTORY, self.jobid)
         self.job_conf_dir = os.path.join(self.job_working_directory, "etc/hadoop/")
@@ -124,53 +126,55 @@ class Hadoop2Bootstrap(object):
     
     
     def get_yarn_site_xml(self, hostname):
-        return """<?xml version="1.0"?>
-<configuration>
-  <property>
-    <name>yarn.resourcemanager.scheduler.class</name>
-    <value>org.apache.hadoop.yarn.server.resourcemanager.scheduler.capacity.CapacityScheduler</value>
-    <description>In case you do not want to use the default scheduler</description>
-  </property>
-  <property>
-    <name>yarn.resourcemanager.hostname</name>
-    <value>%s</value>
-  </property>
-  <!--property>
-    <name>yarn.nodemanager.local-dirs</name>
-    <value>/tmp</value>
-    <description>the local directories used by the nodemanager</description>
-  </property-->
-  <property>
-    <name>yarn.nodemanager.aux-services</name>
-    <value>mapreduce_shuffle</value>
-    <description>shuffle service that needs to be set for Map Reduce to run </description>
-  </property>
-  <property>
-    <name>yarn.app.mapreduce.am.staging-dir</name>
-    <value>%s</value>
-  </property>
-  <property>
-    <name>yarn.nodemanager.delete.debug-delay-sec</name>
-    <value>3600</value>
-    <description>delay deletion of user cache </description>
-  </property>
-  <property>
-    <name>yarn.resourcemanager.resource-tracker.address</name>
-    <value>${yarn.resourcemanager.hostname}:11031</value>
-  </property>
-  <property>
-    <name>yarn.nodemanager.resource.memory-mb</name>
-    <value>16384</value>
-  </property>
-  <property>
-    <name>yarn.scheduler.minimum-allocation-mb</name>
-    <value>2048</value>
-  </property>
-  <property>
-    <name>yarn.nodemanager.resource.cpu-vcores</name>
-    <value>16</value>
-  </property>
-</configuration>"""%(hostname,HADOOP_LOCAL_DIR)
+        module = "hadoop2.configs." + self.config_name
+        logging.debug("Access config in module: " + module)
+        my_data = pkg_resources.resource_string(module, "yarn-site.xml")
+        my_data = my_data%(hostname)
+        return my_data
+
+#         return """<?xml version="1.0"?>
+# <configuration>
+#   <property>
+#     <name>yarn.resourcemanager.scheduler.class</name>
+#     <value>org.apache.hadoop.yarn.server.resourcemanager.scheduler.capacity.CapacityScheduler</value>
+#     <description>In case you do not want to use the default scheduler</description>
+#   </property>
+#   <property>
+#     <name>yarn.resourcemanager.hostname</name>
+#     <value>%s</value>
+#   </property>
+#   <property>
+#     <name>yarn.nodemanager.local-dirs</name>
+#     <value>/tmp</value>
+#     <description>the local directories used by the nodemanager</description>
+#   </property>
+#   <property>
+#     <name>yarn.nodemanager.aux-services</name>
+#     <value>mapreduce_shuffle</value>
+#     <description>shuffle service that needs to be set for Map Reduce to run </description>
+#   </property>
+#   <property>
+#     <name>yarn.nodemanager.delete.debug-delay-sec</name>
+#     <value>3600</value>
+#     <description>delay deletion of user cache </description>
+#   </property>
+#   <property>
+#     <name>yarn.resourcemanager.resource-tracker.address</name>
+#     <value>${yarn.resourcemanager.hostname}:11031</value>
+#   </property>
+#   <property>
+#     <name>yarn.nodemanager.resource.memory-mb</name>
+#     <value>16384</value>
+#   </property>
+#   <property>
+#     <name>yarn.scheduler.minimum-allocation-mb</name>
+#     <value>2048</value>
+#   </property>
+#   <property>
+#     <name>yarn.nodemanager.resource.cpu-vcores</name>
+#     <value>16</value>
+#   </property>
+# </configuration>"""%(hostname)
     
     
     def get_pbs_allocated_nodes(self):
@@ -335,8 +339,12 @@ if __name__ == "__main__" :
                   help="terminate Hadoop")
     parser.add_option("-c", "--clean", action="store_true", dest="clean",
                   help="clean HDFS datanodes after termination")
-   
-    logging.debug("Bootstrap Hadoop on " + socket.gethostname())
+
+    parser.add_option("-n", "--config_name", action="store", nargs="?", metavar="CONFIG_NAME", help="Name of config for host", default="default")
+
+    (options, args) = parser.parse_args()
+    config_name=options.config_name
+    logging.debug("Bootstrap Hadoop on " + socket.gethostname() + " Config: " + config_name)
     
     if not os.path.exists(HADOOP_HOME):
         try:
@@ -358,9 +366,9 @@ if __name__ == "__main__" :
         os.system("tar -xzf hadoop.tar.gz")
     
    
-    (options, args) = parser.parse_args()
+
     
-    hadoop = Hadoop2Bootstrap(WORKING_DIRECTORY)
+    hadoop = Hadoop2Bootstrap(WORKING_DIRECTORY, config_name)
     if options.start:
         hadoop.start()
     else:
