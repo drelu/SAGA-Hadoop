@@ -24,8 +24,6 @@ WORKING_DIRECTORY = os.path.join(os.getcwd(), "work")
 # For using an existing installation
 HADOOP_HOME=os.path.join(os.getcwd(), "work/hadoop-" + VERSION)
 HADOOP_CONF_DIR=os.path.join(HADOOP_HOME, "etc/hadoop")
-HADOOP_TMP_DIR="file:///oasis/scratch/luckow/temp_project"
-HADOOP_LOCAL_DIR="file://" + os.path.expandvars("/scratch/$USER/$PBS_JOBID/")
 
 STOP=False
 
@@ -233,6 +231,7 @@ class Hadoop2Bootstrap(object):
         nodes.reverse()
         return list(set(nodes))
 
+
     def get_slurm_allocated_nodes(self):
         print("Init nodefile from SLURM_NODELIST")
         hosts = os.environ.get("SLURM_NODELIST") 
@@ -387,9 +386,6 @@ if __name__ == "__main__" :
 
         os.chdir(WORKING_DIRECTORY)
         os.system("tar -xzf hadoop.tar.gz")
-    
-   
-
     
     hadoop = Hadoop2Bootstrap(WORKING_DIRECTORY, config_name)
     if options.start:
