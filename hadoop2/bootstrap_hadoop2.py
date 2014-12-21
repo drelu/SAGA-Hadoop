@@ -24,7 +24,8 @@ WORKING_DIRECTORY = os.path.join(os.getcwd(), "work")
 # For using an existing installation
 HADOOP_HOME=os.path.join(os.getcwd(), "work/hadoop-" + VERSION)
 HADOOP_CONF_DIR=os.path.join(HADOOP_HOME, "etc/hadoop")
-HADOOP_TMP_DIR="/oasis/scratch/luckow/temp_project"
+HADOOP_TMP_DIR="file:///oasis/scratch/luckow/temp_project"
+HADOOP_LOCAL_DIR="file://" + os.path.expandvars("/scratch/$USER/$PBS_JOBID/")
 
 STOP=False
 
@@ -73,8 +74,12 @@ class Hadoop2Bootstrap(object):
     #          <value>%s</value>
     #      </property>
     # </configuration>"""%(hostname,HADOOP_TMP_DIR)
+<<<<<<< HEAD
 
 
+=======
+    
+>>>>>>> 3c929a0947a8131c2af17372de182dcb44e4cbd9
     def get_hdfs_site_xml(self, hostname, name_dir):
         return """<?xml version="1.0"?>
     <?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
@@ -346,7 +351,7 @@ if __name__ == "__main__" :
     parser.add_option("-c", "--clean", action="store_true", dest="clean",
                   help="clean HDFS datanodes after termination")
 
-    parser.add_option("-n", "--config_name", action="store", nargs="?", metavar="CONFIG_NAME", help="Name of config for host", default="default")
+    parser.add_option("-n", "--config_name", action="store", type="string", dest="config_name")
 
     (options, args) = parser.parse_args()
     config_name=options.config_name
