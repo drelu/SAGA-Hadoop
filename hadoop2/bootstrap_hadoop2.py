@@ -59,7 +59,8 @@ class Hadoop2Bootstrap(object):
         module = "hadoop2.configs." + self.config_name
         logging.debug("Access config in module: " + module + " File: core-site.xml")
         my_data = pkg_resources.resource_string(module, "core-site.xml")
-        my_data = my_data%(hostname, HADOOP_TMP_DIR)
+        my_data = my_data%(hostname)
+        my_data = os.path.expandvars(my_data)
         return my_data
 
     #     return """<?xml version="1.0"?>
@@ -77,59 +78,73 @@ class Hadoop2Bootstrap(object):
 
 
     def get_hdfs_site_xml(self, hostname, name_dir):
-        return """<?xml version="1.0"?>
-    <?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
-    <configuration>
-         <property>
-             <name>dfs.replication</name>
-             <value>3</value>
-         </property>
-         <property>
-             <name>dfs.name.dir</name>
-             <value>%s</value>
-         </property>
-         <!--property>
-             <name>dfs.datanode.dns.interface</name>
-             <value>eth1</value>
-         </property-->
-         <property>
-              <name>dfs.datanode.data.dir.perm</name>
-              <value>700</value>
-              <description>Permissions for the directories on on the local filesystem where
-              the DFS data node store its blocks. The permissions can either be octal or
-                symbolic.</description>
-        </property>     
-         <property>
-             <name>dfs.webhdfs.enabled</name>
-             <value>true</value>
-         </property>         
-         <property>
-             <name>dfs.datanode.max.locked.memory</name>
-             <value>25769803776</value>
-         </property>         
-    </configuration>"""%(name_dir)
+        module = "hadoop2.configs." + self.config_name
+        logging.debug("Access config in module: " + module + " File: hdfs-site.xml")
+        my_data = pkg_resources.resource_string(module, "hdfs-site.xml")
+        my_data = my_data%(name_dir)
+        my_data = os.path.expandvars(my_data)
+        return my_data
+    #
+    #     return """<?xml version="1.0"?>
+    # <?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
+    # <configuration>
+    #      <property>
+    #          <name>dfs.replication</name>
+    #          <value>3</value>
+    #      </property>
+    #      <property>
+    #          <name>dfs.name.dir</name>
+    #          <value>%s</value>
+    #      </property>
+    #      <!--property>
+    #          <name>dfs.datanode.dns.interface</name>
+    #          <value>eth1</value>
+    #      </property-->
+    #      <property>
+    #           <name>dfs.datanode.data.dir.perm</name>
+    #           <value>700</value>
+    #           <description>Permissions for the directories on on the local filesystem where
+    #           the DFS data node store its blocks. The permissions can either be octal or
+    #             symbolic.</description>
+    #     </property>
+    #      <property>
+    #          <name>dfs.webhdfs.enabled</name>
+    #          <value>true</value>
+    #      </property>
+    #      <property>
+    #          <name>dfs.datanode.max.locked.memory</name>
+    #          <value>25769803776</value>
+    #      </property>
+    # </configuration>"""%(name_dir)
     
     
-    def get_mapred_site_xml(self,hostname):
-        return """<?xml version="1.0"?>
-    <configuration>
-         <!--property>
-             <name>mapred.job.tracker</name>
-             <value>%s:9001</value>
-         </property-->
-         <property>
-             <name>mapreduce.framework.name</name>
-             <value>yarn</value>
-         </property>
-         <property>
-           <name>mapreduce.map.java.opts</name>
-           <value>-Xmx1792m</value>
-        </property>
-         <property>
-           <name>mapreduce.reduce.java.opts</name>
-           <value>-Xmx1792m</value>
-        </property>
-    </configuration>"""%(hostname)
+    def get_mapred_site_xml(self, hostname):
+        module = "hadoop2.configs." + self.config_name
+        logging.debug("Access config in module: " + module + " File: mapred-site.xml")
+        my_data = pkg_resources.resource_string(module, "mapred-site.xml")
+        my_data = my_data%(hostname)
+        my_data = os.path.expandvars(my_data)
+        return my_data
+
+    #     return """<?xml version="1.0"?>
+    #  <configuration>
+    #      <!--property>
+    #          <name>mapred.job.tracker</name>
+    #          <value>%s:9001</value>
+    #      </property-->
+    #      <property>
+    #          <name>mapreduce.framework.name</name>
+    #          <value>yarn</value>
+    #      </property>
+    #      <property>
+    #        <name>mapreduce.map.java.opts</name>
+    #        <value>-Xmx1792m</value>
+    #     </property>
+    #      <property>
+    #        <name>mapreduce.reduce.java.opts</name>
+    #        <value>-Xmx1792m</value>
+    #     </property>
+    # </configuration>"""%(hostname)
     
     
     def get_yarn_site_xml(self, hostname):
@@ -137,6 +152,7 @@ class Hadoop2Bootstrap(object):
         logging.debug("Access config in module: " + module)
         my_data = pkg_resources.resource_string(module, "yarn-site.xml")
         my_data = my_data%(hostname)
+        my_data = os.path.expandvars(my_data)
         return my_data
 
 #         return """<?xml version="1.0"?>

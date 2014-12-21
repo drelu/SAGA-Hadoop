@@ -7,6 +7,6 @@
     </property>
     <property>
         <name>hadoop.tmp.dir</name>
-        <value>%s</value>
+        <value>file:///scratch/$USER/$PBS_JOBID</value>
     </property>
 </configuration>
