@@ -3,7 +3,7 @@
 import os
 import sys
 
-from setuptools import setup
+from setuptools import setup, find_packages
 import subprocess
 
 try:
@@ -67,10 +67,12 @@ setup(name='SAGA-Hadoop',
                     'Topic :: Utilities',
                     ],
       platforms = ('Unix', 'Linux', 'Mac OS'),
-      packages=['hadoop1', 'hadoop2', "spark", "commandline"],
+      #packages=['hadoop1', 'hadoop2', 'hadoop2.configs.default', 'hadoop2.configs.default', "spark", "commandline"],
       include_package_data=True,
+      package_dir = {'':'.'},
+      packages = find_packages(),
       # data files for easy_install
-      package_data= {'hadoop_config': ['hadoop2/configs/**.xml']},
+      #package_data= {'hadoop_config': ['hadoop2/configs/**.xml']},
 
       install_requires=['uuid', 'radical.utils', 'saga-python', 'argparse', "python-hostlist" ],
       entry_points = {
