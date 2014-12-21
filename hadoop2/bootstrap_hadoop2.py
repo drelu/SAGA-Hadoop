@@ -23,6 +23,7 @@ WORKING_DIRECTORY = os.path.join(os.getcwd(), "work")
 # For using an existing installation
 HADOOP_HOME=os.path.join(os.getcwd(), "work/hadoop-" + VERSION)
 HADOOP_CONF_DIR=os.path.join(HADOOP_HOME, "etc/hadoop")
+HADOOP_TMP_DIR="/oasis/scratch/luckow/temp_project"
 
 STOP=False
 
@@ -59,7 +60,11 @@ class Hadoop2Bootstrap(object):
              <name>fs.default.name</name>
              <value>hdfs://%s:9000</value>
          </property>
-    </configuration>"""%(hostname)
+         <property>
+             <name>hadoop.tmp.dir</name>
+             <value>%s</value>
+         </property>
+    </configuration>"""%(hostname,HADOOP_TMP_DIR)
     
     def get_hdfs_site_xml(self, hostname, name_dir):
         return """<?xml version="1.0"?>
