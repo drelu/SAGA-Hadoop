@@ -23,7 +23,8 @@ WORKING_DIRECTORY = os.path.join(os.getcwd(), "work")
 # For using an existing installation
 HADOOP_HOME=os.path.join(os.getcwd(), "work/hadoop-" + VERSION)
 HADOOP_CONF_DIR=os.path.join(HADOOP_HOME, "etc/hadoop")
-HADOOP_TMP_DIR="/oasis/scratch/luckow/temp_project"
+HADOOP_TMP_DIR="file:///oasis/scratch/luckow/temp_project"
+HADOOP_LOCAL_DIR="file://" + os.path.expandvars("/scratch/$USER/$PBS_JOBID/")
 
 STOP=False
 
@@ -56,10 +57,10 @@ class Hadoop2Bootstrap(object):
         return """<?xml version="1.0"?>
     <?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
     <configuration>
-         <property>
+         <!--property>
              <name>fs.default.name</name>
              <value>hdfs://%s:9000</value>
-         </property>
+         </property-->
          <property>
              <name>hadoop.tmp.dir</name>
              <value>%s</value>
@@ -134,15 +135,19 @@ class Hadoop2Bootstrap(object):
     <name>yarn.resourcemanager.hostname</name>
     <value>%s</value>
   </property>
-  <property>
+  <!--property>
     <name>yarn.nodemanager.local-dirs</name>
     <value>/tmp</value>
     <description>the local directories used by the nodemanager</description>
-  </property>
+  </property-->
   <property>
     <name>yarn.nodemanager.aux-services</name>
     <value>mapreduce_shuffle</value>
     <description>shuffle service that needs to be set for Map Reduce to run </description>
+  </property>
+  <property>
+    <name>yarn.app.mapreduce.am.staging-dir</name>
+    <value>%s</value>
   </property>
   <property>
     <name>yarn.nodemanager.delete.debug-delay-sec</name>
@@ -165,7 +170,7 @@ class Hadoop2Bootstrap(object):
     <name>yarn.nodemanager.resource.cpu-vcores</name>
     <value>16</value>
   </property>
-</configuration>"""%(hostname)
+</configuration>"""%(hostname,HADOOP_LOCAL_DIR)
     
     
     def get_pbs_allocated_nodes(self):
