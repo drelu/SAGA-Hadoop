@@ -346,7 +346,7 @@ if __name__ == "__main__" :
     parser.add_option("-c", "--clean", action="store_true", dest="clean",
                   help="clean HDFS datanodes after termination")
 
-    parser.add_option("-n", "--config_name", action="store", nargs="?", metavar="CONFIG_NAME", help="Name of config for host", default="default")
+    parser.add_option("-n", "--config_name", action="store", type="string", dest="config_name")
 
     (options, args) = parser.parse_args()
     config_name=options.config_name
