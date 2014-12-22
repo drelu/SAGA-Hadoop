@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<configuration>
+    <!--property>
+        <name>mapred.job.tracker</name>
+        <value>%s:9001</value>
+    </property-->
+    <property>
+        <name>mapreduce.framework.name</name>
+        <value>yarn</value>
+    </property>
+    <property>
+        <name>yarn.app.mapreduce.am.staging-dir</name>
+        <value>/scratch/01131/$USER/yarn/staging</value>
+    </property>
+    <property>
+        <name>mapreduce.map.java.opts</name>
+        <value>-Xmx1792m</value>
+    </property>
+    <property>
+        <name>mapreduce.reduce.java.opts</name>
+        <value>-Xmx1792m</value>
+    </property>
+</configuration>
