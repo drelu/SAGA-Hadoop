@@ -9,11 +9,11 @@
         <name>yarn.resourcemanager.hostname</name>
         <value>%s</value>
     </property>
-    <property>
+    <!--property>
         <name>yarn.nodemanager.local-dirs</name>
         <value>/tmp</value>
         <description>the local directories used by the nodemanager</description>
-    </property>
+    </property-->
     <property>
         <name>yarn.nodemanager.aux-services</name>
         <value>mapreduce_shuffle</value>
@@ -30,14 +30,18 @@
     </property>
     <property>
         <name>yarn.nodemanager.resource.memory-mb</name>
-        <value>16384</value>
+        <value>32768</value>
     </property>
     <property>
         <name>yarn.scheduler.minimum-allocation-mb</name>
-        <value>2048</value>
+        <value>4096</value>
+    </property>
+    <property>
+        <name>yarn.scheduler.maxmum-allocation-mb</name>
+        <value>8192</value>
     </property>
     <property>
         <name>yarn.nodemanager.resource.cpu-vcores</name>
-        <value>16</value>
+        <value>4</value>
     </property>
 </configuration>

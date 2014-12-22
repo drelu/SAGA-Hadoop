@@ -55,7 +55,7 @@ class Hadoop2Bootstrap(object):
     
     def get_core_site_xml(self, hostname):
         module = "hadoop2.configs." + self.config_name
-        logging.debug("Access config in module: " + module + " File: core-site.xml")
+        print("Access config in module: " + module + " File: core-site.xml")
         my_data = pkg_resources.resource_string(module, "core-site.xml")
         my_data = my_data%(hostname)
         my_data = os.path.expandvars(my_data)
