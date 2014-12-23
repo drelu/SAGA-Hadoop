@@ -7,6 +7,6 @@
     </property-->
     <property>
         <name>hadoop.tmp.dir</name>
-        <value>/scratch/01131/$USER</value>
+        <value>/tmp</value>
     </property>
 </configuration>
