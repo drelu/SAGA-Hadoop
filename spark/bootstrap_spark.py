@@ -16,7 +16,7 @@ from optparse import OptionParser
 logging.basicConfig(level=logging.DEBUG)
 
 # For automatic Download and Installation
-VERSION="1.2.0"
+VERSION="1.3.0"
 SPARK_DOWNLOAD_URL = "http://mirror.reverse.net/pub/apache/spark/spark-"+ VERSION + "/spark-" + VERSION+"-bin-hadoop2.4.tgz"
 WORKING_DIRECTORY = os.path.join(os.getcwd(), "work")
 

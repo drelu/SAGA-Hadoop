@@ -386,7 +386,7 @@ if __name__ == "__main__" :
 
         os.chdir(WORKING_DIRECTORY)
         os.system("tar -xzf hadoop.tar.gz")
-    
+
     hadoop = Hadoop2Bootstrap(WORKING_DIRECTORY, config_name)
     if options.start:
         hadoop.start()
