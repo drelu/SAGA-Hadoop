@@ -1,6 +1,25 @@
+#######################
+# Mac OS:
+# brew install apache-spark
+# SPARK_HOME='/usr/local/Cellar/apache-spark/1.3.0/libexec/'
+# Start Spark: /usr/local/Cellar/apache-spark/1.3.0/libexec/sbin/start-all.sh
+# py4j needs be installed in your virtualenv
+
 import commandline.hadoop
 import spark.bootstrap_spark
-import os
+import os, sys
+
+spark_home='/usr/local/Cellar/apache-spark/1.3.0/libexec/'
+#if details!=None:
+#    spark_home = details["spark_home"]
+os.environ["SPARK_HOME"] = spark_home
+sys.path.insert(0, os.path.join(spark_home, "python"))
+
+# import Spark Libraries
+from pyspark import SparkContext, SparkConf, Accumulator, AccumulatorParam
+from pyspark.sql import SQLContext
+from pyspark.sql.types import *
+from pyspark.mllib.linalg import Vector
 
 
 class PilotComputeDescription(dict):
@@ -60,7 +79,7 @@ class PilotCompute(object):
     def __init__(self, saga_job, details):
         self.saga_job = saga_job
         self.details = details
-
+        self.spark_context = None
 
     def cancel(self):
         """ Remove the PilotCompute from the PilotCompute Service.
@@ -74,6 +93,13 @@ class PilotCompute(object):
     def get_state(self):
         self.saga_job.get_state()
 
+
+    def get_spark_context(self):
+        if self.spark_context == None:
+            self.spark_context = SparkContext(self.details["master_url"],
+                                              "Pilot-Spark",
+                                              sparkHome=spark_home)
+        return self.spark_context
 
     def get_details(self):
         return self.details
