@@ -9,6 +9,10 @@
         <value>yarn</value>
     </property>
     <property>
+        <name>yarn.app.mapreduce.am.staging-dir</name>
+        <value>/scratch/01131/$USER/yarn/staging</value>
+    </property>
+    <property>
         <name>mapreduce.map.java.opts</name>
         <value>-Xmx1792m</value>
     </property>
