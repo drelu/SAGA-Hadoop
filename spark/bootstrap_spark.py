@@ -16,7 +16,7 @@ from optparse import OptionParser
 logging.basicConfig(level=logging.DEBUG)
 
 # For automatic Download and Installation
-VERSION="1.2.0"
+VERSION="1.3.0"
 SPARK_DOWNLOAD_URL = "http://mirror.reverse.net/pub/apache/spark/spark-"+ VERSION + "/spark-" + VERSION+"-bin-hadoop2.4.tgz"
 WORKING_DIRECTORY = os.path.join(os.getcwd(), "work")
 
@@ -127,7 +127,8 @@ class SparkBootstrap(object):
         else:
             nodes=self.get_sge_allocated_nodes() 
         if nodes!=None:
-            master = socket.gethostname().split(".")[0]
+            #master = socket.gethostname().split(".")[0]
+            master = socket.gethostbyname(socket.gethostname())
             master_file = open(os.path.join(self.job_conf_dir, "masters"), "w")
             master_file.write(master) 
             master_file.close()
@@ -175,7 +176,9 @@ class SparkBootstrap(object):
     def set_env(self):
         logging.debug("Export SPARK_CONF_DIR to %s"%self.job_conf_dir)
         os.environ["SPARK_CONF_DIR"]=self.job_conf_dir
-        os.environ["SPARK_MASTER_IP"]=socket.gethostname().split(".")[0]
+        #os.environ["SPARK_MASTER_IP"]=socket.gethostname().split(".")[0]
+        os.environ["SPARK_MASTER_IP"]=socket.gethostbyname(socket.gethostname())
+        print "Spark conf dir: %s; MASTER_IP: %s"%(os.environ["SPARK_CONF_DIR"],os.environ["SPARK_MASTER_IP"])
         os.system("pkill -9 java")
 
 
