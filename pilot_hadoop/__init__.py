@@ -136,21 +136,52 @@ class PilotComputeService(object):
             A PilotCompute handle
         """
         spark_cluster = commandline.hadoop.SAGAHadoopCLI()
+
+
         working_directory=os.getcwd()
 
+        # {
+        #     "resource_url":"slurm+ssh://localhost",
+        #     "number_cores": 16,
+        #     "cores_per_node":16,
+        #     "project": "TG-CCR140028",
+        #     "type":"spark"
+        # }
+
+        working_directory="/tmp"
         if pilotcompute_description.has_key("working_directory"):
             working_directory=pilotcompute_description["working_directory"]
 
+        resource_url="fork://localhost"
+        if pilotcompute_description.has_key("resource_url"):
+            resource_url=pilotcompute_description["resource_url"]
+
+        project=None
+        if pilotcompute_description.has_key("project"):
+            project=pilotcompute_description["project"]
+
+        number_cores=1
+        if pilotcompute_description.has_key("number_cores"):
+            number_cores=int(pilotcompute_description["number_cores"])
+
+
+        cores_per_node=1
+        if pilotcompute_description.has_key("cores_per_node"):
+            cores_per_node=int(pilotcompute_description["cores_per_node"])
+
+
         saga_job = spark_cluster.submit_spark_job(
-                    resource_url="fork://localhost",
+                    resource_url=resource_url,
                     working_directory=working_directory,
-                    number_cores=1,
-                    cores_per_node=1
+                    number_cores=number_cores,
+                    cores_per_node=cores_per_node,
+                    project=project
         )
 
         details = PilotComputeService.get_spark_config_data(working_directory)
         pilot = PilotCompute(saga_job, details)
         return pilot
+
 
     def cancel(self):
         """ Cancel the PilotComputeService.
@@ -172,6 +203,7 @@ class PilotComputeService(object):
                                spark.bootstrap_spark.SPARK_HOME, "conf/masters"), 'r') as f:
             master = f.read()
         f.closed
+        print("Create Spark Context for URL: %s"%("spark://%s:7077"%master))
         details = {
             "spark_home": spark.bootstrap_spark.SPARK_HOME,
             "master_url": "spark://%s:7077"%master,
