@@ -162,7 +162,7 @@ class PilotComputeService(object):
 
         queue=None
         if pilotcompute_description.has_key("queue"):
-            project=pilotcompute_description["queue"]
+            queue=pilotcompute_description["queue"]
 
         number_cores=1
         if pilotcompute_description.has_key("number_cores"):
