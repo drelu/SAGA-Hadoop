@@ -164,6 +164,10 @@ class PilotComputeService(object):
         if pilotcompute_description.has_key("queue"):
             queue=pilotcompute_description["queue"]
 
+        walltime=10
+        if pilotcompute_description.has_key("walltime"):
+            walltime=pilotcompute_description["walltime"]
+
         number_cores=1
         if pilotcompute_description.has_key("number_cores"):
             number_cores=int(pilotcompute_description["number_cores"])
@@ -182,6 +186,7 @@ class PilotComputeService(object):
                     number_cores=number_cores,
                     cores_per_node=cores_per_node,
                     queue=queue,
+                    walltime=walltime,
                     project=project
         )
 
