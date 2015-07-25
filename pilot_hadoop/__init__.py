@@ -160,6 +160,10 @@ class PilotComputeService(object):
         if pilotcompute_description.has_key("project"):
             project=pilotcompute_description["project"]
 
+        queue=None
+        if pilotcompute_description.has_key("queue"):
+            project=pilotcompute_description["queue"]
+
         number_cores=1
         if pilotcompute_description.has_key("number_cores"):
             number_cores=int(pilotcompute_description["number_cores"])
@@ -170,11 +174,14 @@ class PilotComputeService(object):
             cores_per_node=int(pilotcompute_description["cores_per_node"])
 
 
+
+
         saga_job = spark_cluster.submit_spark_job(
                     resource_url=resource_url,
                     working_directory=working_directory,
                     number_cores=number_cores,
                     cores_per_node=cores_per_node,
+                    queue=queue,
                     project=project
         )
 
