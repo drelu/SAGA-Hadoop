@@ -9,17 +9,19 @@ import commandline.hadoop
 import spark.bootstrap_spark
 import os, sys
 
-spark_home='/usr/local/Cellar/apache-spark/1.3.0/libexec/'
-#if details!=None:
-#    spark_home = details["spark_home"]
-os.environ["SPARK_HOME"] = spark_home
-sys.path.insert(0, os.path.join(spark_home, "python"))
 
-# import Spark Libraries
-from pyspark import SparkContext, SparkConf, Accumulator, AccumulatorParam
-from pyspark.sql import SQLContext
-from pyspark.sql.types import *
-from pyspark.mllib.linalg import Vector
+if os.environ.has_key("SPARK_HOME"):
+    spark_home=os.environ["SPARK_HOME"]
+    #if details!=None:
+    #    spark_home = details["spark_home"]
+    #os.environ["SPARK_HOME"] = spark_home
+    sys.path.insert(0, os.path.join(spark_home, "python"))
+    
+    # import Spark Libraries
+    from pyspark import SparkContext, SparkConf, Accumulator, AccumulatorParam
+    from pyspark.sql import SQLContext
+    from pyspark.sql.types import *
+    from pyspark.mllib.linalg import Vector
 
 
 class PilotComputeDescription(dict):
