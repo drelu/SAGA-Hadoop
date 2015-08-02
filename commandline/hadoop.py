@@ -88,7 +88,13 @@ class SAGAHadoopCLI(object):
 
 
     def get_spark_config_data(self, jobid):
-        with open(os.path.join(spark.bootstrap_spark.SPARK_HOME, "conf/masters"), 'r') as f:
+        master_file=os.path.join(spark.bootstrap_spark.SPARK_HOME, "conf/masters")
+        counter = 0
+        while os.path.exists(master_file)==False and counter <600:
+            time.sleep(1) 
+            counter = counter + 1
+
+        with open(master_file, 'r') as f:
             master = f.read()
         f.closed
 
