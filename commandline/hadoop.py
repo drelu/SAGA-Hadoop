@@ -76,7 +76,7 @@ class SAGAHadoopCLI(object):
                 state = myjob.get_state()
                 if state=="Running":
                     if os.path.exists(os.path.join(working_directory, "work/spark_started")):
-                        self.get_spark_config_data(id)
+                        self.get_spark_config_data(id, working_directory)
                         break
                 elif state == "Failed":
                     break
@@ -87,8 +87,8 @@ class SAGAHadoopCLI(object):
             print "An error occurred: %s" % (str(ex))
 
 
-    def get_spark_config_data(self, jobid):
-        master_file=os.path.join(spark.bootstrap_spark.SPARK_HOME, "conf/masters")
+    def get_spark_config_data(self, jobid, working_directory=spark.bootstrap_spark.SPARK_HOME):
+        master_file=os.path.join(working_directory, "conf/masters")
         counter = 0
         while os.path.exists(master_file)==False and counter <600:
             time.sleep(1) 
