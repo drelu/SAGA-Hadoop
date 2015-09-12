@@ -8,18 +8,21 @@
 import commandline.hadoop
 import spark.bootstrap_spark
 import os, sys
+import time
 
-spark_home='/usr/local/Cellar/apache-spark/1.3.0/libexec/'
-#if details!=None:
-#    spark_home = details["spark_home"]
-os.environ["SPARK_HOME"] = spark_home
-sys.path.insert(0, os.path.join(spark_home, "python"))
 
-# import Spark Libraries
-from pyspark import SparkContext, SparkConf, Accumulator, AccumulatorParam
-from pyspark.sql import SQLContext
-from pyspark.sql.types import *
-from pyspark.mllib.linalg import Vector
+if os.environ.has_key("SPARK_HOME"):
+    spark_home=os.environ["SPARK_HOME"]
+    #if details!=None:
+    #    spark_home = details["spark_home"]
+    #os.environ["SPARK_HOME"] = spark_home
+    sys.path.insert(0, os.path.join(spark_home, "python"))
+    
+    # import Spark Libraries
+    from pyspark import SparkContext, SparkConf, Accumulator, AccumulatorParam
+    from pyspark.sql import SQLContext
+    from pyspark.sql.types import *
+    from pyspark.mllib.linalg import Vector
 
 
 class PilotComputeDescription(dict):
@@ -83,6 +86,7 @@ class PilotCompute(object):
         self.spark_sql_context = spark_sql_context
 
 
+
     def cancel(self):
         """ Remove the PilotCompute from the PilotCompute Service.
 
@@ -133,7 +137,7 @@ class PilotComputeService(object):
             Keyword arguments:
             pjs_id -- Don't create a new, but connect to an existing (optional)
         """
-        pass
+        pass 
 
     @classmethod
     def create_pilot(cls, pilotcompute_description):
@@ -145,6 +149,15 @@ class PilotComputeService(object):
             Return value:
             A PilotCompute handle
         """
+
+        if os.environ.has_key("SPARK_HOME"):
+            print "Cleanup old Spark Installation"
+            try:
+                os.remove(os.path.join(os.environ["SPARK_HOME"], "conf/masters"))
+                os.remove(os.path.join(os.environ["SPARK_HOME"], "conf/slaves"))
+            except:
+                pass
+        spark_cluster = commandline.hadoop.SAGAHadoopCLI()
         working_directory=os.getcwd()
 
         # {
@@ -257,10 +270,16 @@ class PilotComputeService(object):
 
     @classmethod
     def get_spark_config_data(cls, working_directory):
+        master_file = os.path.join(spark.bootstrap_spark.SPARK_HOME, "conf/masters")
+        master_file=os.path.join(spark.bootstrap_spark.SPARK_HOME, "conf/masters")
+        counter = 0
+        while os.path.exists(master_file)==False and counter <600:
+            time.sleep(1)
+            counter = counter + 1
 
-        with open(os.path.join(working_directory,
-                               spark.bootstrap_spark.SPARK_HOME, "conf/masters"), 'r') as f:
-            master = f.read()
+        print "Open master file: %s"%master_file
+        with open(master_file, 'r') as f:
+            master = f.read().strip()
         f.closed
         print("Create Spark Context for URL: %s"%("spark://%s:7077"%master))
         details = {
