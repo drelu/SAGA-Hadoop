@@ -65,12 +65,13 @@ class SAGAHadoopCLI(object):
             # create the job (state: New)
             myjob = js.create_job(jd)
 
-            print "Starting Spark bootstrap job...\n"
+            print "Starting Spark bootstrap job ..."
             # run the job (submit the job to PBS)
             myjob.run()
             id = myjob.get_id()
             #id = id[id.index("]-[")+3: len(id)-1]
             print "**** Job: " + str(id) + " State : %s" % (myjob.get_state())
+            print "Wait for Spark Cluster to startup. File: %s" % (os.path.join(working_directory, "work/spark_started"))
 
             while True:
                 state = myjob.get_state()
@@ -87,8 +88,13 @@ class SAGAHadoopCLI(object):
             print "An error occurred: %s" % (str(ex))
 
 
-    def get_spark_config_data(self, jobid, working_directory=spark.bootstrap_spark.SPARK_HOME):
-        master_file=os.path.join(working_directory, "conf/masters")
+    def get_spark_config_data(self, jobid, working_directory=None):
+        spark_home_path=spark.bootstrap_spark.SPARK_HOME
+        #print spark_home
+        if working_directory!=None:
+            spark_home_path=os.path.join(working_directory, "work", os.path.basename(spark_home))
+        master_file=os.path.join(spark_home_path, "conf/masters")
+        #print master_file
         counter = 0
         while os.path.exists(master_file)==False and counter <600:
             time.sleep(1) 
@@ -98,12 +104,12 @@ class SAGAHadoopCLI(object):
             master = f.read()
         f.closed
 
-        print "SPARK installation directory: %s"%spark.bootstrap_spark.SPARK_HOME
+        print "SPARK installation directory: %s"%spark_home_path
         #print "Allocated Resources for Hadoop cluster: " + hosts
         #print "YARN Web Interface: http://%s:8088"% hosts[:hosts.find("/")]
         #print "HDFS Web Interface: http://%s:50070"% hosts[:hosts.find("/")]
         print "(please allow some time until the SPARK cluster is completely initialized)"
-        print "export PATH=%s/bin:$PATH"%(spark.bootstrap_spark.SPARK_HOME)
+        print "export PATH=%s/bin:$PATH"%(spark_home_path)
         print "Spark Web URL: http://" + master + ":8080"
 
 

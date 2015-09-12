@@ -10,13 +10,13 @@ import spark.bootstrap_spark
 import os, sys
 import time
 
+SPARK_HOME=os.environ["SPARK_HOME"]
+print "SPARK Home: %s"%SPARK_HOME
 
-if os.environ.has_key("SPARK_HOME"):
-    spark_home=os.environ["SPARK_HOME"]
-    #if details!=None:
-    #    spark_home = details["spark_home"]
-    #os.environ["SPARK_HOME"] = spark_home
-    sys.path.insert(0, os.path.join(spark_home, "python"))
+try:
+    sys.path.insert(0, os.path.join(SPARK_HOME, "python"))
+    sys.path.insert(0, os.path.join(SPARK_HOME, 'python/lib/py4j-0.8.2.1-src.zip'))
+    sys.path.insert(0, os.path.join(SPARK_HOME, 'bin') )
     
     # import Spark Libraries
     from pyspark import SparkContext, SparkConf, Accumulator, AccumulatorParam
@@ -24,6 +24,8 @@ if os.environ.has_key("SPARK_HOME"):
     from pyspark.sql.types import *
     from pyspark.mllib.linalg import Vector
 
+except:
+    print "Error  importing Spark"
 
 class PilotComputeDescription(dict):
     """ B{PilotComputeDescription (PCD).}
@@ -86,7 +88,6 @@ class PilotCompute(object):
         self.spark_sql_context = spark_sql_context
 
 
-
     def cancel(self):
         """ Remove the PilotCompute from the PilotCompute Service.
 
@@ -104,10 +105,11 @@ class PilotCompute(object):
 
 
     def get_spark_context(self):
+        #print SPARK_HOME
         if self.spark_context == None:
             self.spark_context = SparkContext(self.details["master_url"],
                                               "Pilot-Spark",
-                                              sparkHome=spark_home)
+                                              sparkHome=SPARK_HOME)
         return self.spark_context
 
 
@@ -251,20 +253,7 @@ class PilotComputeService(object):
 
     @classmethod
     def __connected_yarn_spark_cluster(self, pilotcompute_description):
-        if os.environ.has_key("SPARK_HOME")==False:
-            print "Please set SPARK_HOME"
-            return
-        SPARK_HOME=os.environ["SPARK_HOME"]
-        sys.path.insert(0, os.path.join(SPARK_HOME, "python"))
-        sys.path.insert(0, os.path.join(SPARK_HOME, 'python/lib/py4j-0.8.2.1-src.zip'))
-        sys.path.insert(0, os.path.join(SPARK_HOME, 'bin') )
 
-        # import Spark Libraries
-        from pyspark import SparkContext, SparkConf, Accumulator, AccumulatorParam
-        from pyspark.sql import SQLContext
-        from pyspark.sql.types import *
-        from pyspark.mllib.linalg import Vector
-        
         number_cores=1
         if pilotcompute_description.has_key("number_cores"):
             number_cores=int(pilotcompute_description["number_cores"])
@@ -285,14 +274,17 @@ class PilotComputeService(object):
         pilot = PilotCompute(spark_context=sc, spark_sql_context=sqlCtx)
         return pilot
 
+
     @classmethod
     def get_spark_config_data(cls, working_directory=None):
-        if working_directory==None:
-            working_directory=spark.bootstrap_spark.SPARK_HOME
-        master_file = os.path.join(working_directory, "conf/masters")
-        master_file=os.path.join(working_directory, "conf/masters")
+        spark_home_path=spark.bootstrap_spark.SPARK_HOME
+        if working_directory!=None:
+            spark_home_path=os.path.join(working_directory, "work", os.path.basename(spark_home_path))
+        master_file=os.path.join(spark_home_path, "conf/masters")
+        print master_file
         counter = 0
         while os.path.exists(master_file)==False and counter <600:
+            print "Looking for %s"%master_file
             time.sleep(1)
             counter = counter + 1
 
@@ -302,7 +294,7 @@ class PilotComputeService(object):
         f.closed
         print("Create Spark Context for URL: %s"%("spark://%s:7077"%master))
         details = {
-            "spark_home": spark.bootstrap_spark.SPARK_HOME,
+            "spark_home": spark_home_path,
             "master_url": "spark://%s:7077"%master,
             "web_ui_url": "http://%s:8080"%master,
         }
