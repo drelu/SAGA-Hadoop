@@ -6,7 +6,6 @@ from pilot_hadoop import PilotComputeService
 os.environ["SAGA_VERBOSE"]="100"
 pilot_compute_description = {
     "resource_url":"fork://localhost",
-
     "number_cores": 1,
     "cores_per_node":1,
     "type":"spark"
