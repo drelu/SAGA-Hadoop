@@ -95,6 +95,8 @@ class PilotCompute(object):
         """
         if self.saga_job!=None:
             self.saga_job.cancel()
+        if self.get_spark_context()!=None:
+            self.get_spark_context().stop()
 
 
     def get_state(self):
@@ -109,7 +111,7 @@ class PilotCompute(object):
         return self.spark_context
 
 
-    def get_spark_context(self):
+    def get_spark_sql_context(self):
         if self.spark_sql_context == None:
             self.spark_sql_context = SQLContext(self.get_spark_context())
         return self.spark_sql_context
@@ -151,14 +153,12 @@ class PilotComputeService(object):
         """
 
         if os.environ.has_key("SPARK_HOME"):
-            print "Cleanup old Spark Installation"
+            #print "Cleanup old Spark Installation"
             try:
                 os.remove(os.path.join(os.environ["SPARK_HOME"], "conf/masters"))
                 os.remove(os.path.join(os.environ["SPARK_HOME"], "conf/slaves"))
             except:
                 pass
-        spark_cluster = commandline.hadoop.SAGAHadoopCLI()
-        working_directory=os.getcwd()
 
         # {
         #     "resource_url":"slurm+ssh://localhost",
@@ -169,52 +169,48 @@ class PilotComputeService(object):
         # }
 
         resource_url="fork://localhost"
-        if pilotcompute_description.has_key("resource_url"):
+        if pilotcompute_description.has_key("service_url"):
+            resource_url=pilotcompute_description["service_url"]
+        elif pilotcompute_description.has_key("resource_url"):
             resource_url=pilotcompute_description["resource_url"]
-
-        if resource_url.startswith("yarn" or resource_url.startswith("spark"):
-            pilot = self.__connected_yarn_spark_cluster(pilotcompute_description)
+        if resource_url.startswith("yarn") or resource_url.startswith("spark"):
+            pilot = cls.__connected_yarn_spark_cluster(pilotcompute_description)
             return pilot
         else:
-            pilot = self.__start_spark_cluster(self, pilotcompute_description)
+            pilot = cls.__start_spark_cluster(pilotcompute_description)
+            return pilot
 
 
     def cancel(self):
-    """ Cancel the PilotComputeService.
+        """ Cancel the PilotComputeService.
 
-        This also cancels all the PilotJobs that were under control of this PJS.
+            This also cancels all the PilotJobs that were under control of this PJS.
 
-        Keyword arguments:
-        None
+            Keyword arguments:
+            None
 
-        Return value:
-        Result of operation
-    """
-    pass
+            Return value:
+            Result of operation
+        """
+        pass
 
-
+    @classmethod
     def __start_spark_cluster(self, pilotcompute_description):
         """
         Bootstraps Spark Cluster
         :param pilotcompute_description: dictionary containing detail about the spark cluster to launch
         :return: Pilot
         """
+        spark_cluster = commandline.hadoop.SAGAHadoopCLI()
 
-        saga_job = spark_cluster.submit_spark_job(
-            resource_url=resource_url,
-            working_directory=working_directory,
-            number_cores=number_cores,
-            cores_per_node=cores_per_node,
-            queue=queue,
-            walltime=walltime,
-            project=project
-        )
+        if pilotcompute_description.has_key("service_url"):
+            resource_url=pilotcompute_description["service_url"]
+        elif pilotcompute_description.has_key("resource_url"):
+            resource_url=pilotcompute_description["resource_url"]
 
         working_directory="/tmp"
         if pilotcompute_description.has_key("working_directory"):
             working_directory=pilotcompute_description["working_directory"]
-
-
 
         project=None
         if pilotcompute_description.has_key("project"):
@@ -238,14 +234,27 @@ class PilotComputeService(object):
             cores_per_node=int(pilotcompute_description["cores_per_node"])
 
 
+        saga_job = spark_cluster.submit_spark_job(
+            resource_url=resource_url,
+            working_directory=working_directory,
+            number_cores=number_cores,
+            cores_per_node=cores_per_node,
+            queue=queue,
+            walltime=walltime,
+            project=project
+        )
+
         details = PilotComputeService.get_spark_config_data(working_directory)
         pilot = PilotCompute(saga_job, details)
         return pilot
 
 
-
-
+    @classmethod
     def __connected_yarn_spark_cluster(self, pilotcompute_description):
+        if os.environ.has_key("SPARK_HOME")==False:
+            print "Please set SPARK_HOME"
+            return
+        SPARK_HOME=os.environ["SPARK_HOME"]
         sys.path.insert(0, os.path.join(SPARK_HOME, "python"))
         sys.path.insert(0, os.path.join(SPARK_HOME, 'python/lib/py4j-0.8.2.1-src.zip'))
         sys.path.insert(0, os.path.join(SPARK_HOME, 'bin') )
@@ -255,18 +264,26 @@ class PilotComputeService(object):
         from pyspark.sql import SQLContext
         from pyspark.sql.types import *
         from pyspark.mllib.linalg import Vector
-        SPARK_HOME=os.environ["SPARK_HOME"]
+        
+        number_cores=1
+        if pilotcompute_description.has_key("number_cores"):
+            number_cores=int(pilotcompute_description["number_cores"])
+        
+        number_of_processes = 1
+        if pilotcompute_description.has_key("number_of_processes"):
+            number_of_processes = int(pilotcompute_description["number_of_processes"])
+
         conf = SparkConf()
-        conf.set("spark.num.executors", "4")
-        conf.set("spark.executor.instances", "4")
-        conf.set("spark.executor.memory", "5g")
-        conf.set("spark.cores.max", "4")
+        conf.set("spark.num.executors", str(number_of_processes))
+        #conf.set("spark.executor.instances", "4")
+        #conf.set("spark.executor.memory", "5g")
+        #conf.set("spark.cores.max", "4")
         conf.setAppName("Pilot-Spark")
         conf.setMaster("yarn-client")
         sc = SparkContext(conf=conf)
         sqlCtx = SQLContext(sc)
-
-
+        pilot = PilotCompute(spark_context=sc, spark_sql_context=sqlCtx)
+        return pilot
 
     @classmethod
     def get_spark_config_data(cls, working_directory):
