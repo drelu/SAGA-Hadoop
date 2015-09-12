@@ -169,7 +169,9 @@ class PilotComputeService(object):
         # }
 
         resource_url="fork://localhost"
-        if pilotcompute_description.has_key("resource_url"):
+        if pilotcompute_description.has_key("service_url"):
+            resource_url=pilotcompute_description["service_url"]
+        elif pilotcompute_description.has_key("resource_url"):
             resource_url=pilotcompute_description["resource_url"]
 
         if resource_url.startswith("yarn" or resource_url.startswith("spark"):
@@ -214,8 +216,6 @@ class PilotComputeService(object):
         if pilotcompute_description.has_key("working_directory"):
             working_directory=pilotcompute_description["working_directory"]
 
-
-
         project=None
         if pilotcompute_description.has_key("project"):
             project=pilotcompute_description["project"]
@@ -236,7 +236,6 @@ class PilotComputeService(object):
         cores_per_node=1
         if pilotcompute_description.has_key("cores_per_node"):
             cores_per_node=int(pilotcompute_description["cores_per_node"])
-
 
         details = PilotComputeService.get_spark_config_data(working_directory)
         pilot = PilotCompute(saga_job, details)
@@ -269,9 +268,11 @@ class PilotComputeService(object):
 
 
     @classmethod
-    def get_spark_config_data(cls, working_directory):
-        master_file = os.path.join(spark.bootstrap_spark.SPARK_HOME, "conf/masters")
-        master_file=os.path.join(spark.bootstrap_spark.SPARK_HOME, "conf/masters")
+    def get_spark_config_data(cls, working_directory=None):
+        if working_directory==None:
+            working_directory=spark.bootstrap_spark.SPARK_HOME
+        master_file = os.path.join(working_directory, "conf/masters")
+        master_file=os.path.join(working_directory, "conf/masters")
         counter = 0
         while os.path.exists(master_file)==False and counter <600:
             time.sleep(1)
