@@ -94,10 +94,15 @@ class PilotCompute(object):
             Keyword arguments:
             None
         """
-        if self.saga_job!=None:
-            self.saga_job.cancel()
+        if self.details.has_key("spark_home"):
+            command = os.path.join(self.details["spark_home"], "sbin/stop-all.sh")
+            #print command
+            os.system(command)
+
         if self.get_spark_context()!=None:
             self.get_spark_context().stop()
+        if self.saga_job!=None:
+            self.saga_job.cancel()
 
 
     def get_state(self):
@@ -105,7 +110,6 @@ class PilotCompute(object):
 
 
     def get_spark_context(self):
-        #print SPARK_HOME
         if self.spark_context == None:
             self.spark_context = SparkContext(self.details["master_url"],
                                               "Pilot-Spark",
