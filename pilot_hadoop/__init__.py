@@ -268,7 +268,7 @@ class PilotComputeService(object):
 
         conf = SparkConf()
         conf.set("spark.num.executors", str(number_of_processes))
-        #conf.set("spark.executor.instances", "4")
+        conf.set("spark.executor.instances", str(number_of_processes))
         #conf.set("spark.executor.memory", "5g")
         #conf.set("spark.cores.max", "4")
         conf.setAppName("Pilot-Spark")
