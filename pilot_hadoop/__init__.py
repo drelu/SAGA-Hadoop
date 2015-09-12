@@ -286,9 +286,11 @@ class PilotComputeService(object):
         return pilot
 
     @classmethod
-    def get_spark_config_data(cls, working_directory):
-        master_file = os.path.join(spark.bootstrap_spark.SPARK_HOME, "conf/masters")
-        master_file=os.path.join(spark.bootstrap_spark.SPARK_HOME, "conf/masters")
+    def get_spark_config_data(cls, working_directory=None):
+        if working_directory==None:
+            working_directory=spark.bootstrap_spark.SPARK_HOME
+        master_file = os.path.join(working_directory, "conf/masters")
+        master_file=os.path.join(working_directory, "conf/masters")
         counter = 0
         while os.path.exists(master_file)==False and counter <600:
             time.sleep(1)
