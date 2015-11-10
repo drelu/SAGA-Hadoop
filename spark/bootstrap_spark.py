@@ -21,10 +21,10 @@ SPARK_DOWNLOAD_URL = "http://mirror.reverse.net/pub/apache/spark/spark-"+ VERSIO
 WORKING_DIRECTORY = os.path.join(os.getcwd(), "work")
 
 # For using an existing installation
-if not os.environ.has_key("SPARK_HOME"):
-    SPARK_HOME=os.path.join(os.getcwd(), "work/", os.path.basename(SPARK_DOWNLOAD_URL).rpartition(".")[0])
-else:
-    SPARK_HOME=os.environ["SPARK_HOME"]
+#if not os.environ.has_key("SPARK_HOME"):
+SPARK_HOME=os.path.join(os.getcwd(), "work/", os.path.basename(SPARK_DOWNLOAD_URL).rpartition(".")[0])
+#else:
+# SPARK_HOME=os.environ["SPARK_HOME"]
 
 SPARK_CONF_DIR=os.path.join(SPARK_HOME, "conf")
 
@@ -86,7 +86,9 @@ class SparkBootstrap(object):
         print "Init SGE"
         sge_node_file = os.environ.get("PE_HOSTFILE")    
         if sge_node_file == None:
-            return ["localhost"]
+            #return [socket.gethostname()]
+            return [socket.gethostbyname(socket.gethostname())]
+            #return ["localhost"]
         f = open(sge_node_file)
         sgenodes = f.readlines()
         f.close() 
