@@ -276,7 +276,7 @@ class PilotComputeService(object):
         conf.set("spark.num.executors", str(number_of_processes))
         conf.set("spark.executor.instances", str(number_of_processes))
         conf.set("spark.executor.memory", executor_memory)
-        conf.set("spark.executor.cores", "2")
+        conf.set("spark.executor.cores", "1")
         conf.setAppName("Pilot-Spark")
         conf.setMaster("yarn-client")
         sc = SparkContext(conf=conf)
