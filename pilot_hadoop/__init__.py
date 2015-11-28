@@ -94,7 +94,7 @@ class PilotCompute(object):
             Keyword arguments:
             None
         """
-        if self.details.has_key("spark_home"):
+        if self.details!=None and self.details.has_key("spark_home"):
             command = os.path.join(self.details["spark_home"], "sbin/stop-all.sh")
             #print command
             os.system(command)
