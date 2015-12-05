@@ -1,5 +1,7 @@
 # SAGA Hadoop
 
+Last Updated: 12/05/2015
+
 # Overview:
 
 Use [SAGA](http://saga-project.github.io/saga-python/) to spawn an Hadoop Cluster within an HPC batch job.
@@ -40,7 +42,7 @@ see `hadoop1` for setting up a Hadoop 1.x.x cluster
 
 see `hadoop2` for setting up a Hadoop 2.6.x cluster
  
-see `spark` for setting up a Spark 1.2 cluster
+see `spark` for setting up a Spark 1.5.x cluster
 
 
 # Examples:
@@ -55,6 +57,10 @@ see `spark` for setting up a Spark 1.2 cluster
 
     saga-hadoop --resource=pbs://localhost --walltime=59 --number_cores=16 --project=TG-CCR140028 --framework=spark
     
-    
+
+***Wrangler***
+
+    export JAVA_HOME=/usr/java/jdk1.8.0_45/
+    saga-hadoop --resource=slurm://localhost --queue=normal --walltime=59 --number_cores=24 --project=TG-MCB090174
 
 
