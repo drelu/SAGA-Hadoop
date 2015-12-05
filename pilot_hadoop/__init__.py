@@ -186,6 +186,7 @@ class PilotComputeService(object):
             pilot = cls.__connected_yarn_spark_cluster(pilotcompute_description)
             return pilot
         elif resource_url.starswith("spark"):
+            print "Connect to Spark cluster: "+ str(resource_url)
             pilot = cls.__connected_spark_cluster(resource_url)
             return pilot
         else:
