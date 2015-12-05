@@ -1,8 +1,8 @@
 #######################
 # Mac OS:
 # brew install apache-spark
-# SPARK_HOME='/usr/local/Cellar/apache-spark/1.3.0/libexec/'
-# Start Spark: /usr/local/Cellar/apache-spark/1.3.0/libexec/sbin/start-all.sh
+# SPARK_HOME='/usr/local/Cellar/apache-spark/1.5.2/libexec/'
+# Start Spark: /usr/local/Cellar/apache-spark/1.5.2/libexec/sbin/start-all.sh
 # py4j needs be installed in your virtualenv
 
 import commandline.hadoop
@@ -78,7 +78,6 @@ class PilotCompute(object):
         A PilotCompute has state, can be queried, can be cancelled and be
         re-initialized.
     """
-
 
 
     def __init__(self, saga_job=None, details=None, spark_context=None, spark_sql_context=None):
@@ -186,6 +185,9 @@ class PilotComputeService(object):
         if resource_url.startswith("yarn") or resource_url.startswith("spark"):
             pilot = cls.__connected_yarn_spark_cluster(pilotcompute_description)
             return pilot
+        elif resource_url.starswith("spark"):
+            pilot = cls.__connected_spark_cluster(resource_url)
+            return pilot
         else:
             pilot = cls.__start_spark_cluster(pilotcompute_description)
             return pilot
@@ -276,13 +278,23 @@ class PilotComputeService(object):
 
         conf = SparkConf()
 
-        conf = SparkConf()
         conf.set("spark.num.executors", str(number_of_processes))
         conf.set("spark.executor.instances", str(number_of_processes))
         conf.set("spark.executor.memory", executor_memory)
         conf.set("spark.executor.cores", "1")
         conf.setAppName("Pilot-Spark")
         conf.setMaster("yarn-client")
+        sc = SparkContext(conf=conf)
+        sqlCtx = SQLContext(sc)
+        pilot = PilotCompute(spark_context=sc, spark_sql_context=sqlCtx)
+        return pilot
+
+
+    @classmethod
+    def __connected_spark_cluster(self, resource_url):
+        conf = SparkConf()
+        conf.setAppName("Pilot-Spark")
+        conf.setMaster(resource_url)
         sc = SparkContext(conf=conf)
         sqlCtx = SQLContext(sc)
         pilot = PilotCompute(spark_context=sc, spark_sql_context=sqlCtx)

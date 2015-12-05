@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-""" Hadoop Bootstrap Script (based on Hadoop 2.6 release) """
+""" Hadoop Bootstrap Script (based on Hadoop 2.7.1 release) """
 import os, sys
 import pdb
 import urllib
