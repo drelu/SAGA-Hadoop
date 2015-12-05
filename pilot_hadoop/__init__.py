@@ -94,6 +94,7 @@ class PilotCompute(object):
             Keyword arguments:
             None
         """
+
         try:
             if self.details!=None and self.details.has_key("spark_home"):
                 command = os.path.join(self.details["spark_home"], "sbin/stop-all.sh")
@@ -269,11 +270,17 @@ class PilotComputeService(object):
         if pilotcompute_description.has_key("number_of_processes"):
             number_of_processes = int(pilotcompute_description["number_of_processes"])
 
+        executor_memory="1g"
+        if pilotcompute_description.has_key("number_of_processes"):
+            executor_memory = pilotcompute_description["physical_memory_per_process"]
+
+        conf = SparkConf()
+
         conf = SparkConf()
         conf.set("spark.num.executors", str(number_of_processes))
         conf.set("spark.executor.instances", str(number_of_processes))
-        #conf.set("spark.executor.memory", "5g")
-        #conf.set("spark.cores.max", "4")
+        conf.set("spark.executor.memory", executor_memory)
+        conf.set("spark.executor.cores", "1")
         conf.setAppName("Pilot-Spark")
         conf.setMaster("yarn-client")
         sc = SparkContext(conf=conf)
