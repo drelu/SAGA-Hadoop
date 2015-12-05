@@ -57,7 +57,8 @@ see `spark` for setting up a Spark 1.5.x cluster
 
     saga-hadoop --resource=pbs://localhost --walltime=59 --number_cores=16 --project=TG-CCR140028 --framework=spark
     
-*** Wrangler***
+
+***Wrangler***
 
     export JAVA_HOME=/usr/java/jdk1.8.0_45/
     saga-hadoop --resource=slurm://localhost --queue=normal --walltime=59 --number_cores=24 --project=TG-MCB090174
