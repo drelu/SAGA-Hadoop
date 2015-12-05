@@ -40,7 +40,7 @@ Some Blog Posts about SAGA-Hadoop:
 
 see `hadoop1` for setting up a Hadoop 1.x.x cluster
 
-see `hadoop2` for setting up a Hadoop 2.6.x cluster
+see `hadoop2` for setting up a Hadoop 2.7.x cluster
  
 see `spark` for setting up a Spark 1.5.x cluster
 
