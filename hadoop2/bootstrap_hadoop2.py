@@ -17,7 +17,7 @@ import pkg_resources
 logging.basicConfig(level=logging.DEBUG)
 
 # For automatic Download and Installation
-VERSION="2.6.0"
+VERSION="2.7.1"
 HADOOP_DOWNLOAD_URL = "http://apache.osuosl.org/hadoop/common/hadoop-"+ VERSION + "/hadoop-"+ VERSION + ".tar.gz"
 WORKING_DIRECTORY = os.path.join(os.getcwd(), "work")
 
