@@ -180,7 +180,7 @@ class SAGAHadoopCLI(object):
                     hosts = i[i.find("=")+1:].strip()
         except:
             pass
-        hadoop_home=os.path.join(os.getcwd(), "work/hadoop-2.6.0")
+        hadoop_home=os.path.join(os.getcwd(), "work/hadoop-2.7.1")
         print "HADOOP installation directory: %s"%hadoop_home
         #print "Allocated Resources for Hadoop cluster: " + hosts 
         #print "YARN Web Interface: http://%s:8088"% hosts[:hosts.find("/")]
