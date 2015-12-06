@@ -182,7 +182,7 @@ class PilotComputeService(object):
             resource_url=pilotcompute_description["service_url"]
         elif pilotcompute_description.has_key("resource_url"):
             resource_url=pilotcompute_description["resource_url"]
-        if resource_url.startswith("yarn") or resource_url.startswith("spark"):
+        if resource_url.startswith("yarn"):
             pilot = cls.__connected_yarn_spark_cluster(pilotcompute_description)
             return pilot
         elif resource_url.starswith("spark"):
