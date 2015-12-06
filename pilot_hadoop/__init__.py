@@ -187,7 +187,7 @@ class PilotComputeService(object):
             return pilot
         elif resource_url.startswith("spark"):
             print "Connect to Spark cluster: "+ str(resource_url)
-            pilot = cls.__connected_spark_cluster(resource_url)
+            pilot = cls.__connected_spark_cluster(resource_url, pilotcompute_description)
             return pilot
         else:
             pilot = cls.__start_spark_cluster(pilotcompute_description)
@@ -292,13 +292,18 @@ class PilotComputeService(object):
 
 
     @classmethod
-    def __connected_spark_cluster(self, resource_url):
+    def __connected_spark_cluster(self, resource_url, pilot_description=None):
         conf = SparkConf()
         conf.setAppName("Pilot-Spark")
-        conf.set("spark.executor.memory", "1G")
-        conf.set("spark.executor.cores", "1")
-	conf.set("spark.executor.instances", "1")
+        #conf.set("spark.executor.memory", "1G")
+        #conf.set("spark.executor.cores", "1")
+        #conf.set("spark.executor.instances", "1")
+        if pilot_description!=None:
+            for i in pilot_description.keys():
+                if i.startswith("spark"):
+                    conf.set(i, pilot_description[i])
         conf.setMaster(resource_url)
+        print(conf.toDebugString())
         sc = SparkContext(conf=conf)
         sqlCtx = SQLContext(sc)
         pilot = PilotCompute(spark_context=sc, spark_sql_context=sqlCtx)
