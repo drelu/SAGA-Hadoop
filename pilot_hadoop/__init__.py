@@ -295,6 +295,8 @@ class PilotComputeService(object):
     def __connected_spark_cluster(self, resource_url):
         conf = SparkConf()
         conf.setAppName("Pilot-Spark")
+        conf.set("spark.executor.memory", "1G")
+        conf.set("spark.executor.cores", "1")
         conf.setMaster(resource_url)
         sc = SparkContext(conf=conf)
         sqlCtx = SQLContext(sc)
