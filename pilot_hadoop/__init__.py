@@ -278,11 +278,14 @@ class PilotComputeService(object):
             executor_memory = pilotcompute_description["physical_memory_per_process"]
 
         conf = SparkConf()
-
         conf.set("spark.num.executors", str(number_of_processes))
         conf.set("spark.executor.instances", str(number_of_processes))
         conf.set("spark.executor.memory", executor_memory)
-        conf.set("spark.executor.cores", "1")
+        conf.set("spark.executor.cores", number_cores)
+        if pilotcompute_description!=None:
+            for i in pilotcompute_description.keys():
+                if i.startswith("spark"):
+                    conf.set(i, pilotcompute_description[i])
         conf.setAppName("Pilot-Spark")
         conf.setMaster("yarn-client")
         sc = SparkContext(conf=conf)
@@ -295,9 +298,6 @@ class PilotComputeService(object):
     def __connected_spark_cluster(self, resource_url, pilot_description=None):
         conf = SparkConf()
         conf.setAppName("Pilot-Spark")
-        #conf.set("spark.executor.memory", "1G")
-        #conf.set("spark.executor.cores", "1")
-        #conf.set("spark.executor.instances", "1")
         if pilot_description!=None:
             for i in pilot_description.keys():
                 if i.startswith("spark"):
