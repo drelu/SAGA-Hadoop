@@ -1,18 +1,22 @@
 '''
 Command Line Util for using BigJob (via the Pilot-API)
 '''
+import saga
 import argparse
 import sys
 import os
 import pdb
 import pickle
 import hadoop1, hadoop2
-import saga
 import logging
 import time
 import subprocess
 import re
 import spark.bootstrap_spark
+
+
+
+logging.basicConfig(level=logging.DEBUG)
  
 SAGA_HADOOP_DIRECTORY="~/.hadoop"  
   
@@ -21,6 +25,88 @@ class SAGAHadoopCLI(object):
     def __init__(self):
         self.pilots = []
         self.__restore()
+
+    ####################################################################################################################
+    # Kafka 0.10
+    def submit_kafka_job(self,
+                         resource_url="fork://localhost",
+                         working_directory=os.getcwd(),
+                         number_cores=1,
+                         cores_per_node=1,
+                         spmd_variation=None,
+                         queue=None,
+                         walltime=None,
+                         project=None,
+                         config_name="default"
+                         ):
+
+        try:
+            # create a job service for Futuregrid's 'india' PBS cluster
+            js = saga.job.Service(resource_url)
+            # describe our job
+            jd = saga.job.Description()
+            # resource requirements
+            jd.total_cpu_count = int(number_cores)
+            # environment, executable & arguments
+            executable = "python"
+            arguments = ["-m", "kafka.bootstrap_kafka"]
+            logging.debug("Run %s Args: %s"%(executable, str(arguments)))
+            jd.executable  = executable
+            jd.arguments   = arguments
+            # output options
+            jd.output =  os.path.join("kafka_job.stdout")
+            jd.error  = os.path.join("kafka_job.stderr")
+            jd.working_directory=working_directory
+            jd.queue=queue
+            if project!=None:
+                jd.project=project
+            #jd.environment =
+            if spmd_variation!=None:
+                jd.spmd_variation=spmd_variation
+            if walltime!=None:
+                jd.wall_time_limit=walltime
+
+            # create the job (state: New)
+            myjob = js.create_job(jd)
+
+            #print "Starting Spark bootstrap job ..."
+            # run the job (submit the job to PBS)
+            myjob.run()
+            id = myjob.get_id()
+            #id = id[id.index("]-[")+3: len(id)-1]
+            #print "**** Job: " + str(id) + " State : %s" % (myjob.get_state())
+            #print "Wait for Spark Cluster to startup. File: %s" % (os.path.join(working_directory, "work/spark_started"))
+
+            while True:
+                state = myjob.get_state()
+                if state=="Running":
+                    if os.path.exists(os.path.join(working_directory, "work/kafka_started")):
+                        self.get_kafka_config_data(id, working_directory)
+                        break
+                elif state == "Failed":
+                    break
+                time.sleep(3)
+            return myjob
+
+        except Exception as ex:
+            print "An error occurred: %s" % (str(ex))
+
+
+    def get_kafka_config_data(self, jobid, working_directory=None):
+        # spark_home_path=spark.bootstrap_spark.SPARK_HOME
+        # if working_directory!=None:
+        #     spark_home_path=os.path.join(working_directory, "work", os.path.basename(spark_home_path))
+        # master_file=os.path.join(spark_home_path, "conf/masters")
+        # #print master_file
+        # counter = 0
+        # while os.path.exists(master_file)==False and counter <600:
+        #     time.sleep(1)
+        #     counter = counter + 1
+        #
+        # with open(master_file, 'r') as f:
+        #     master = f.read()
+        # f.closed
+        pass
 
     ####################################################################################################################
     # Spark 1.x
@@ -285,7 +371,7 @@ def main():
     saga_hadoop_group.add_argument('--cores_per_node',  default="1", nargs="?")    
     saga_hadoop_group.add_argument('--project', action="store", nargs="?", metavar="PROJECT", help="Allocation id for project", default=None)
 
-    saga_hadoop_group.add_argument('--framework', action="store", nargs="?", metavar="FRAMEWORK", help="Framework to start: [hadoop, spark]", default="hadoop")
+    saga_hadoop_group.add_argument('--framework', action="store", nargs="?", metavar="FRAMEWORK", help="Framework to start: [hadoop, spark, kafka]", default="hadoop")
     saga_hadoop_group.add_argument("-n", "--config_name", action="store", nargs="?", metavar="CONFIG_NAME", help="Name of config for host", default="default")
 
     parsed_arguments = parser.parse_args()    
@@ -294,6 +380,16 @@ def main():
     
     if parsed_arguments.version==True:
         app.version()
+    elif parsed_arguments.framework=="kafka":
+        app.submit_kafka_job(resource_url=parsed_arguments.resource,
+                             working_directory=parsed_arguments.working_directory,
+                             number_cores=parsed_arguments.number_cores,
+                             cores_per_node=parsed_arguments.cores_per_node,
+                             spmd_variation=parsed_arguments.spmd_variation,
+                             queue=parsed_arguments.queue,
+                             walltime=parsed_arguments.walltime,
+                             project=parsed_arguments.project,
+                             config_name=parsed_arguments.config_name)
     elif parsed_arguments.framework=="spark":
         app.submit_spark_job(resource_url=parsed_arguments.resource,
                               working_directory=parsed_arguments.working_directory,

@@ -236,9 +236,7 @@ class Hadoop2Bootstrap(object):
         print("Init nodefile from SLURM_NODELIST")
         hosts = os.environ.get("SLURM_NODELIST") 
         if hosts == None:
-            self.init_local()
-            return
-
+            return ["localhost"]
         print "***** Hosts: " + str(hosts) 
         hosts=hostlist.expand_hostlist(hosts)
         number_cpus_per_node = 1
