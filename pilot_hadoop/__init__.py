@@ -1,11 +1,10 @@
 #######################
 # Mac OS:
 # brew install apache-spark
-# SPARK_HOME='/usr/local/Cellar/apache-spark/1.5.2/libexec/'
-# Start Spark: /usr/local/Cellar/apache-spark/1.5.2/libexec/sbin/start-all.sh
+# SPARK_HOME='/usr/local/Cellar/apache-spark/2.0.0/libexec/'
+# Start Spark: /usr/local/Cellar/apache-spark/2.0.0/libexec/sbin/start-all.sh
 # py4j needs be installed in your virtualenv
 
-import commandline.hadoop
 import spark.bootstrap_spark
 import os, sys
 import time
@@ -214,6 +213,7 @@ class PilotComputeService(object):
         :param pilotcompute_description: dictionary containing detail about the spark cluster to launch
         :return: Pilot
         """
+        import commandline.hadoop
         spark_cluster = commandline.hadoop.SAGAHadoopCLI()
 
         if pilotcompute_description.has_key("service_url"):

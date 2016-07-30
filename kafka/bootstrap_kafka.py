@@ -143,7 +143,7 @@ class KafkaBootstrap():
             os.makedirs(path)
             server_properties_filename = os.path.join(path, "server.properties")
             server_properties_file = open(server_properties_filename, "w")
-            server_properties_file.write(self.get_server_properties(master=master, hostname=node))
+            server_properties_file.write(self.get_server_properties(master=master, hostname=node.strip()))
             server_properties_file.close()
             self.broker_config_files.append(server_properties_filename)
         
