@@ -150,7 +150,8 @@ class SparkBootstrap(object):
         self.set_env()
         start_command = os.path.join(SPARK_HOME, "sbin/start-all.sh")
         logging.debug("Execute: %s"%start_command)
-        os.system(". ~/.bashrc & " + start_command)
+        #os.system(". ~/.bashrc & " + start_command)
+        status = subprocess.call(start_command, shell=True)
         print("SPARK started, please set SPARK_CONF_DIR to:\nexport SPARK_CONF_DIR=%s"%self.job_conf_dir)
         
         
