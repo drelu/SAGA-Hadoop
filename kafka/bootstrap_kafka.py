@@ -45,16 +45,16 @@ class KafkaBootstrap():
         self.jobid = "kafka-"+str(uuid.uuid1())
         self.job_working_directory = os.path.join(WORKING_DIRECTORY, self.jobid)
         self.job_conf_dir = os.path.join(self.job_working_directory, "config")
-        self.broker_config_files = []
+        self.broker_config_files = {}
         os.makedirs(self.job_conf_dir)
 
 
     
-    def get_server_properties(self, master, hostname):
+    def get_server_properties(self, master, hostname, broker_id):
         module = "kafka.configs." + self.config_name
         print("Access config in module: " + module + " File: server.properties")
         my_data = pkg_resources.resource_string(module, "server.properties")
-        my_data = my_data%(hostname, hostname, master)
+        my_data = my_data%(broker_id, hostname, hostname, master)
         my_data = os.path.expandvars(my_data)
         return my_data
 
@@ -143,9 +143,9 @@ class KafkaBootstrap():
             os.makedirs(path)
             server_properties_filename = os.path.join(path, "server.properties")
             server_properties_file = open(server_properties_filename, "w")
-            server_properties_file.write(self.get_server_properties(master=master, hostname=node.strip()))
+            server_properties_file.write(self.get_server_properties(master=master, hostname=node.strip(), broker_id=idx))
             server_properties_file.close()
-            self.broker_config_files.append(server_properties_filename)
+            self.broker_config_files[node]=server_properties_filename
         
         zookeeper_properties_file = open(os.path.join(self.job_conf_dir, "zookeeper.properties"), "w")
         zookeeper_properties_file.write(self.get_zookeeper_propertiesl(master))
@@ -164,8 +164,9 @@ class KafkaBootstrap():
         os.system(". ~/.bashrc & " + start_command)
 
         logging.debug("Start Kafka Cluster")
-        for config in self.broker_config_files:
-            start_command = os.path.join(self.kafka_home, "bin/kafka-server-start.sh") + \
+        for node in self.broker_config_files.keys():
+            config = self.broker_config_files[node] 
+            start_command = os.path.join("ssh " + node.strip() + " " + self.kafka_home, "bin/kafka-server-start.sh") + \
                                         " -daemon " + config
             logging.debug("Execute: %s"%start_command)
             os.system(". ~/.bashrc & " + start_command)
