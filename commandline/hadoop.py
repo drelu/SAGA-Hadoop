@@ -92,7 +92,23 @@ class SAGAHadoopCLI(object):
             print "An error occurred: %s" % (str(ex))
 
 
-    def get_kafka_config_data(self, jobid, working_directory=None):
+    def get_kafka_config_data(self, jobid, working_directory=None, all=False):
+        base_work_dir = os.path.join(working_directory, "work")
+        kafka_config_dirs = [i if os.path.isdir(os.path.join(base_work_dir,i)) and i.find("kafka-")>=0 else None for i in os.listdir(base_work_dir)]
+        kafka_config_dirs = filter(lambda a: a != None, kafka_config_dirs)
+        kafka_config_dirs.sort(key=lambda x: os.path.getmtime(os.path.join(base_work_dir, x)),  reverse=True)
+        if all == False: kafka_config_dirs=kafka_config_dirs[:1]
+        for kafka_config_dir in kafka_config_dirs:
+            conf = os.path.join(base_work_dir, kafka_config_dir, "config")
+            broker_config_dirs =[i if os.path.isdir(os.path.join(conf, i)) and i.find("broker-")>=0 else None for i in os.listdir(conf)]
+            broker_config_dirs = filter(lambda a: a != None, broker_config_dirs)
+            for broker in broker_config_dirs:
+                with open(os.path.join(conf,broker, "server.properties"), "r") as config:
+                    print "Kafka Config: %s (%s)"%(conf, time.ctime(os.path.getmtime(conf)))
+                    lines = config.readlines()
+                    for line in lines:
+                        if line.startswith("broker.id") or line.startswith("listeners") or line.startswith("zookeeper.connect"):
+                            print line.strip().replace("=", ": ")
         # spark_home_path=spark.bootstrap_spark.SPARK_HOME
         # if working_directory!=None:
         #     spark_home_path=os.path.join(working_directory, "work", os.path.basename(spark_home_path))
@@ -106,7 +122,6 @@ class SAGAHadoopCLI(object):
         # with open(master_file, 'r') as f:
         #     master = f.read()
         # f.closed
-        pass
 
     ####################################################################################################################
     # Spark 1.x
@@ -173,11 +188,21 @@ class SAGAHadoopCLI(object):
         except Exception as ex:
             print "An error occurred: %s" % (str(ex))
 
+    def scan_dir(dir):
+        for name in os.listdir(dir):
+            path = os.path.join(dir, name)
+            if os.path.isfile(path):
+                print path
+            else:
+                scan_dir(path)
+
 
     def get_spark_config_data(self, jobid, working_directory=None):
         spark_home_path=spark.bootstrap_spark.SPARK_HOME
-        if working_directory!=None:
-            spark_home_path=os.path.join(working_directory, "work", os.path.basename(spark_home_path))
+        # search for spark_home:
+        base_work_dir = os.path.join(working_directory, "work")
+        spark_home=''.join([i.strip() if os.path.isdir("work/" + i) and i.find("spark")>=0 else '' for i in os.listdir("work")])
+        spark_home_path=os.path.join(working_directory, "work", os.path.basename(spark_home_path))
         master_file=os.path.join(spark_home_path, "conf/masters")
         #print master_file
         counter = 0
@@ -188,11 +213,11 @@ class SAGAHadoopCLI(object):
         with open(master_file, 'r') as f:
             master = f.read()
         f.closed
-
-        #print "SPARK installation directory: %s"%spark_home_path
-        #print "(please allow some time until the SPARK cluster is completely initialized)"
-        #print "export PATH=%s/bin:$PATH"%(spark_home_path)
-        #print "Spark Web URL: http://" + master + ":8080"
+        print "SPARK installation directory: %s"%spark_home_path
+        print "(please allow some time until the SPARK cluster is completely initialized)"
+        print "export PATH=%s/bin:$PATH"%(spark_home_path)
+        print "Spark Web URL: http://" + master + ":8080"
+        print "Spark Submit endpoint: spark://" + master + ":7077"
 
 
     ####################################################################################################################
