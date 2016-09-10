@@ -109,19 +109,7 @@ class SAGAHadoopCLI(object):
                     for line in lines:
                         if line.startswith("broker.id") or line.startswith("listeners") or line.startswith("zookeeper.connect"):
                             print line.strip().replace("=", ": ")
-        # spark_home_path=spark.bootstrap_spark.SPARK_HOME
-        # if working_directory!=None:
-        #     spark_home_path=os.path.join(working_directory, "work", os.path.basename(spark_home_path))
-        # master_file=os.path.join(spark_home_path, "conf/masters")
-        # #print master_file
-        # counter = 0
-        # while os.path.exists(master_file)==False and counter <600:
-        #     time.sleep(1)
-        #     counter = counter + 1
-        #
-        # with open(master_file, 'r') as f:
-        #     master = f.read()
-        # f.closed
+
 
     ####################################################################################################################
     # Spark 1.x
