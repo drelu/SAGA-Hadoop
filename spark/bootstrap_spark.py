@@ -138,6 +138,9 @@ class SparkBootstrap(object):
             master_file = open(os.path.join(self.job_conf_dir, "masters"), "w")
             master_file.write(nodes[0].strip()) 
             master_file.close()
+            master_file2=open(os.path.join(WORKING_DIRECTORY, 'spark_master'), 'w')
+            master_file2.write(nodes[0].strip())
+            master_file2.close()    
 
             slave_file = open(os.path.join(self.job_conf_dir, "slaves"), "w")
             slave_file.writelines(nodes) 
