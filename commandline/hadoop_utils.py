@@ -1,7 +1,9 @@
 import os
 import time
 
-def get_kafka_config_data(self, jobid, working_directory=None, all=False):
+
+
+def get_kafka_config_data(working_directory=None, all=False):
     base_work_dir = os.path.join(working_directory, "work")
     kafka_config_dirs = [i if os.path.isdir(os.path.join(base_work_dir,i)) and i.find("kafka-")>=0 else None for i in os.listdir(base_work_dir)]
     kafka_config_dirs = filter(lambda a: a != None, kafka_config_dirs)
@@ -21,7 +23,7 @@ def get_kafka_config_data(self, jobid, working_directory=None, all=False):
 
 
 
-def get_spark_master(self, working_directory=None):
+def get_spark_master(working_directory=None):
     # search for spark_home:
     base_work_dir = os.path.join(working_directory, "work")
     spark_home=''.join([i.strip() if os.path.isdir("work/" + i) and i.find("spark")>=0 else '' for i in os.listdir(base_work_dir)])
