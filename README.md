@@ -42,7 +42,9 @@ see `hadoop1` for setting up a Hadoop 1.x.x cluster
 
 see `hadoop2` for setting up a Hadoop 2.7.x cluster
  
-see `spark` for setting up a Spark 1.5.x cluster
+see `spark` for setting up a Spark 2.0.x cluster
+
+see `kafka` for setting up a Kafka 0.10.x cluster
 
 
 # Examples:
@@ -50,7 +52,7 @@ see `spark` for setting up a Spark 1.5.x cluster
 
 ***Stampede:***
 
-    saga-hadoop --resource=slurm://localhost --queue=normal --walltime=239 --number_cores=256 --project=TG-MCB090174
+    saga-hadoop --resource=slurm://localhost --queue=normal --walltime=239 --number_cores=256 --project=xxx
 
 
 ***Gordon:***
@@ -61,6 +63,6 @@ see `spark` for setting up a Spark 1.5.x cluster
 ***Wrangler***
 
     export JAVA_HOME=/usr/java/jdk1.8.0_45/
-    saga-hadoop --resource=slurm://localhost --queue=normal --walltime=59 --number_cores=24 --project=TG-MCB090174
+    saga-hadoop --resource=slurm://localhost --queue=normal --walltime=59 --number_cores=24 --project=xxx
 
 
