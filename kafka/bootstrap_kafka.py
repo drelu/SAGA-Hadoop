@@ -14,11 +14,12 @@ import hostlist
 from optparse import OptionParser
 import pkg_resources
 import datetime
+from pykafka import KafkaClient
 
 logging.basicConfig(level=logging.DEBUG)
 
 # For automatic Download and Installation
-VERSION="0.10.0.0"
+VERSION="0.10.1.0"
 KAFKA_DOWNLOAD_URL = "http://www-us.apache.org/dist/kafka/" + VERSION + "/kafka_2.11-" + VERSION + ".tgz"
 WORKING_DIRECTORY = os.path.join(os.getcwd(), "work")
 
@@ -61,7 +62,7 @@ class KafkaBootstrap():
 
 
 
-    def get_zookeeper_propertiesl(self, hostname):
+    def get_zookeeper_properties(self, hostname):
         module = "kafka.configs." + self.config_name
         logging.debug("Access config in module: " + module + " File: zookeeper.properties")
         my_data = pkg_resources.resource_string(module, "zookeeper.properties")
@@ -70,7 +71,8 @@ class KafkaBootstrap():
 
     #######################################################################################
     ## Get Node List from Resource Management System
-    def get_pbs_allocated_nodes(self):
+    @staticmethod
+    def get_pbs_allocated_nodes():
         print "Init PBS"
         pbs_node_file = os.environ.get("PBS_NODEFILE")    
         if pbs_node_file == None:
@@ -82,8 +84,8 @@ class KafkaBootstrap():
         f.close()    
         return list(set(nodes))
 
-
-    def get_sge_allocated_nodes(self):
+    @staticmethod
+    def get_sge_allocated_nodes():
         logging.debug("Init SGE or Local")
         sge_node_file = os.environ.get("PE_HOSTFILE")    
         if sge_node_file == None:
@@ -103,8 +105,8 @@ class KafkaBootstrap():
         nodes.reverse()
         return list(set(nodes))
 
-
-    def get_slurm_allocated_nodes(self):
+    @staticmethod
+    def get_slurm_allocated_nodes():
         print("Init nodefile from SLURM_NODELIST")
         hosts = os.environ.get("SLURM_NODELIST") 
         if hosts == None:
@@ -121,13 +123,14 @@ class KafkaBootstrap():
             freenodes.append((h + "\n"))
         return list(set(freenodes))
 
-    def get_nodelist_from_resourcemanager(self):
+    @staticmethod
+    def get_nodelist_from_resourcemanager():
         if (os.environ.get("PBS_NODEFILE") != None and os.environ.get("PBS_NODEFILE") != ""):
-            nodes = self.get_pbs_allocated_nodes()
+            nodes = KafkaBootstrap.get_pbs_allocated_nodes()
         elif (os.environ.get("SLURM_NODELIST") != None):
-            nodes = self.get_slurm_allocated_nodes()
+            nodes = KafkaBootstrap.get_slurm_allocated_nodes()
         else:
-            nodes = self.get_sge_allocated_nodes()
+            nodes = KafkaBootstrap.get_sge_allocated_nodes()
         return nodes
 
 
@@ -148,7 +151,7 @@ class KafkaBootstrap():
             self.broker_config_files[node]=server_properties_filename
         
         zookeeper_properties_file = open(os.path.join(self.job_conf_dir, "zookeeper.properties"), "w")
-        zookeeper_properties_file.write(self.get_zookeeper_propertiesl(master))
+        zookeeper_properties_file.write(self.get_zookeeper_properties(master))
         zookeeper_properties_file.close()
 
 
@@ -174,6 +177,16 @@ class KafkaBootstrap():
         print("Kafka started with configuration: %s"%self.job_conf_dir)
 
 
+    def check_kafka(self):
+        brokers={}
+        try:
+            master = socket.gethostname().split(".")[0]
+            client = KafkaClient(zookeeper_hosts=master+":2181")
+            brokers = client.brokers
+        except:
+            pass
+        print "Found %d brokers: %s"%(len(brokers.keys()), str(brokers))
+        return brokers
         
     def stop_kafka(self):
         logging.debug("Stop Kafka")
@@ -213,7 +226,16 @@ if __name__ == "__main__" :
                   help="clean Kafka topics in Zookeeper after termination")
 
     parser.add_option("-n", "--config_name", action="store", type="string", dest="config_name", default="default")
-
+    
+    node_list = KafkaBootstrap.get_nodelist_from_resourcemanager()
+    number_nodes = len(node_list)
+    print "nodes: %s"%str(node_list)
+    run_timestamp=datetime.datetime.now()
+    performance_trace_filename = "kafka_performance_" + run_timestamp.strftime("%Y%m%d-%H%M%S") + ".csv"
+    kafka_config_filename = "kafka_config_" + run_timestamp.strftime("%Y%m%d-%H%M%S")  
+    performance_trace_file = open(os.path.join(WORKING_DIRECTORY, performance_trace_filename), "a")
+    start = time.time()
+    #performance_trace_file.write("start_time, %.5f"%(time.time()))
     (options, args) = parser.parse_args()
     config_name=options.config_name
     logging.debug("Bootstrap Kafka on " + socket.gethostname())
@@ -241,9 +263,28 @@ if __name__ == "__main__" :
         kafka_home=os.path.join(WORKING_DIRECTORY, os.path.splitext(filename)[0])
         os.environ["KAFKA_HOME"]=kafka_home
 
+    end_download = time.time()
+    performance_trace_file.write("download, %d, %.5f\n"%(number_nodes, end_download-start))
+    performance_trace_file.flush()
+
+
+    #initialize object for managing kafka clusters    
     kafka = KafkaBootstrap(WORKING_DIRECTORY, kafka_home, config_name)
+
     if options.start:
         kafka.start()
+        number_brokers=0
+        while number_brokers!=number_nodes:
+            brokers=kafka.check_kafka()
+            number_brokers=len(brokers.values())
+            logging.debug("Number brokers: %d, number nodes: %d"%(number_brokers,number_nodes))
+            time.sleep(1)
+        end_start = time.time()
+        performance_trace_file.write("startup, %d, %.5f\n"%(number_nodes, (end_start-end_download)))
+        performance_trace_file.flush()
+        with open("kafka_started", "w") as f:
+            f.write(str(node_list))
+
     else:
         kafka.stop()
         if options.clean:
@@ -253,16 +294,16 @@ if __name__ == "__main__" :
         sys.exit(0)
     
     print "Finished launching of Kafka Cluster - Sleeping now"
-    f = open(os.path.join(WORKING_DIRECTORY, 'kafka_started'), 'w')
-    f.write(datetime.datetime.now().isoformat())
-    f.close()
 
     while STOP==False:
         logging.debug("stop: " + str(STOP))
         time.sleep(10)
             
     kafka.stop()
-    os.remove(os.path.join(WORKING_DIRECTORY, "started"))
+    os.remove(os.path.join(WORKING_DIRECTORY, "kafka_started"))
+    performance_trace_file.write("total_runtime, %d, %.5f\n"%(number_nodes, time.time()-start))
+    performance_trace_file.flush()
+    performance_trace_file.close()
         
         
     

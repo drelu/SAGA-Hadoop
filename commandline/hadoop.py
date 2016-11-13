@@ -112,7 +112,7 @@ class SAGAHadoopCLI(object):
 
 
     ####################################################################################################################
-    # Spark 1.x
+    # Spark 2.x
     def submit_spark_job(self,
                           resource_url="fork://localhost",
                           working_directory=os.getcwd(),
