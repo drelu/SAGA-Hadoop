@@ -11,6 +11,7 @@ import time
 import signal
 import socket
 import hostlist
+import datetime
 from optparse import OptionParser
 
 logging.basicConfig(level=logging.DEBUG)
@@ -68,8 +69,9 @@ class SparkBootstrap(object):
         self.job_conf_dir = os.path.join(self.job_working_directory, "conf")
 
 
-    
-    def get_pbs_allocated_nodes(self):
+    ###################################################################################################### 
+    @staticmethod
+    def get_pbs_allocated_nodes():
         print "Init PBS"
         pbs_node_file = os.environ.get("PBS_NODEFILE")    
         if pbs_node_file == None:
@@ -82,7 +84,8 @@ class SparkBootstrap(object):
         return list(set(nodes))
 
 
-    def get_sge_allocated_nodes(self):
+    @staticmethod
+    def get_sge_allocated_nodes():
         print "Init SGE"
         sge_node_file = os.environ.get("PE_HOSTFILE")    
         if sge_node_file == None:
@@ -104,7 +107,8 @@ class SparkBootstrap(object):
         nodes.reverse()
         return list(set(nodes))
 
-    def get_slurm_allocated_nodes(self):
+    @staticmethod
+    def get_slurm_allocated_nodes():
         print("Init nodefile from SLURM_NODELIST")
         hosts = os.environ.get("SLURM_NODELIST") 
         if hosts == None:
@@ -122,16 +126,28 @@ class SparkBootstrap(object):
             freenodes.append((h + "\n"))
         return list(set(freenodes))
 
+    @staticmethod
+    def get_nodelist_from_resourcemanager():
+        if (os.environ.get("PBS_NODEFILE") != None and os.environ.get("PBS_NODEFILE") != ""):
+            nodes = SparkBootstrap.get_pbs_allocated_nodes()
+        elif (os.environ.get("SLURM_NODELIST") != None):
+            nodes = SparkBootstrap.get_slurm_allocated_nodes()
+        else:
+            nodes = SparkBootstrap.get_sge_allocated_nodes()
+        return nodes
 
+
+    #################################################################################################################
     def configure_spark(self):
         #logging.debug("Copy config from " + SPARK_CONF_DIR + " to: " + self.job_conf_dir)
         #shutil.copytree(SPARK_CONF_DIR, self.job_conf_dir)
-        if(os.environ.get("PBS_NODEFILE")!=None and os.environ.get("PBS_NODEFILE")!=""):
-            nodes=self.get_pbs_allocated_nodes()
-        elif (os.environ.get("SLURM_NODELIST")!=None):
-            nodes=self.get_slurm_allocated_nodes()
-        else:
-            nodes=self.get_sge_allocated_nodes() 
+        #if(os.environ.get("PBS_NODEFILE")!=None and os.environ.get("PBS_NODEFILE")!=""):
+        #    nodes=self.get_pbs_allocated_nodes()
+        #elif (os.environ.get("SLURM_NODELIST")!=None):
+        #    nodes=self.get_slurm_allocated_nodes()
+        #else:
+        #    nodes=self.get_sge_allocated_nodes() 
+        nodes = self.get_nodelist_from_resourcemanager()
         if nodes!=None:
             #master = socket.gethostname().split(".")[0]
             #master = socket.gethostbyname(socket.gethostname())
@@ -209,7 +225,16 @@ if __name__ == "__main__" :
                   help="terminate Spark")
 
     logging.debug("Bootstrap SPARK on " + socket.gethostname())
-    
+    node_list = SparkBootstrap.get_nodelist_from_resourcemanager()
+    number_nodes = len(node_list)
+    print "nodes: %s"%str(node_list)
+
+    run_timestamp=datetime.datetime.now()
+    performance_trace_filename = "spark_performance_" + run_timestamp.strftime("%Y%m%d-%H%M%S") + ".csv"
+    performance_trace_file = open(os.path.join(WORKING_DIRECTORY, performance_trace_filename), "a")
+    start = time.time()
+
+ 
     if not os.path.exists(SPARK_HOME):
         try:
             os.makedirs(WORKING_DIRECTORY)
@@ -229,13 +254,17 @@ if __name__ == "__main__" :
         os.chdir(WORKING_DIRECTORY)
         os.system("tar -xzf spark.tar.gz")
 
-    
-   
+    end_download = time.time() 
+    performance_trace_file.write("download,spark, %d, %.5f\n"%(number_nodes, end_download-start))
+    performance_trace_file.flush() 
     (options, args) = parser.parse_args()
     
     spark = SparkBootstrap(WORKING_DIRECTORY, SPARK_HOME)
     if options.start:
         spark.start()
+        end_start=time.time()
+        performance_trace_file.write("startup,spark, %d, %.5f\n"%(number_nodes, (end_start-end_download)))
+        performance_trace_file.flush()
     else:
         spark.stop()
         if options.clean:
