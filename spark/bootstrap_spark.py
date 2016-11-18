@@ -5,6 +5,7 @@ import pdb
 import urllib
 import subprocess
 import logging
+import re
 import uuid
 import shutil
 import time
@@ -17,7 +18,7 @@ from optparse import OptionParser
 logging.basicConfig(level=logging.DEBUG)
 
 # For automatic Download and Installation
-VERSION="2.0.1"
+VERSION="2.0.2"
 SPARK_DOWNLOAD_URL = "http://mirror.reverse.net/pub/apache/spark/spark-"+ VERSION + "/spark-" + VERSION+"-bin-hadoop2.6.tgz"
 WORKING_DIRECTORY = os.path.join(os.getcwd(), "work")
 
@@ -67,6 +68,7 @@ class SparkBootstrap(object):
         #self.job_working_directory = os.path.join(WORKING_DIRECTORY, self.jobid)
         self.job_working_directory=spark_home
         self.job_conf_dir = os.path.join(self.job_working_directory, "conf")
+        self.master="localhost"
 
 
     ###################################################################################################### 
@@ -151,12 +153,14 @@ class SparkBootstrap(object):
         if nodes!=None:
             #master = socket.gethostname().split(".")[0]
             #master = socket.gethostbyname(socket.gethostname())
+            self.master=nodes[0].strip()
             master_file = open(os.path.join(self.job_conf_dir, "masters"), "w")
             master_file.write(nodes[0].strip()) 
             master_file.close()
             master_file2=open(os.path.join(WORKING_DIRECTORY, 'spark_master'), 'w')
             master_file2.write(nodes[0].strip())
             master_file2.close()    
+
 
             slave_file = open(os.path.join(self.job_conf_dir, "slaves"), "w")
             slave_file.writelines(nodes) 
@@ -207,6 +211,14 @@ class SparkBootstrap(object):
         print "Spark conf dir: %s; MASTER_IP: %s"%(os.environ["SPARK_CONF_DIR"],os.environ["SPARK_MASTER_IP"])
         os.system("pkill -9 java")
 
+    def check_spark(self):
+        url = "http://" + self.master + ":8080"
+        matches = []
+        response = urllib.urlopen(url)
+        data = response.read()
+        matches=re.findall("(?<=>)worker-[0-9\\-.]*", data, re.DOTALL)
+        print matches
+        return matches
 
 #########################################################
 #  main                                                 #
@@ -262,6 +274,12 @@ if __name__ == "__main__" :
     spark = SparkBootstrap(WORKING_DIRECTORY, SPARK_HOME)
     if options.start:
         spark.start()
+        number_workers=0
+        while number_workers!=number_nodes:
+            brokers=spark.check_spark()
+            number_workers=len(brokers)
+            logging.debug("Number workers: %d, number nodes: %d"%(number_workers,number_nodes))
+            time.sleep(1)
         end_start=time.time()
         performance_trace_file.write("startup,spark, %d, %.5f\n"%(number_nodes, (end_start-end_download)))
         performance_trace_file.flush()
