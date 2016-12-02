@@ -152,13 +152,13 @@ class SparkBootstrap(object):
         nodes = self.get_nodelist_from_resourcemanager()
         if nodes!=None:
             #master = socket.gethostname().split(".")[0]
-            #master = socket.gethostbyname(socket.gethostname())
-            self.master=nodes[0].strip()
+            master = socket.gethostbyname(socket.gethostname())
+            self.master=master
             master_file = open(os.path.join(self.job_conf_dir, "masters"), "w")
-            master_file.write(nodes[0].strip()) 
+            master_file.write(master) 
             master_file.close()
             master_file2=open(os.path.join(WORKING_DIRECTORY, 'spark_master'), 'w')
-            master_file2.write(nodes[0].strip())
+            master_file2.write(master)
             master_file2.close()    
 
 
