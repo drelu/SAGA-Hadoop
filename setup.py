@@ -81,7 +81,7 @@ setup(name='SAGA-Hadoop',
             #     "spark", "commandline"],
 
       # data files for easy_install
-      package_data= {'': ['*.xml', '*.properties']},
+      package_data= {'': ['*.xml', '*.yaml', '*.properties']},
       install_requires=['uuid', 'radical.utils', 'saga-python', 'argparse', "python-hostlist", "setuptools-git" ],
       entry_points = {
         'console_scripts': [ 'saga-hadoop=commandline.hadoop:main']        
