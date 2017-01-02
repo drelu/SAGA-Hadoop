@@ -13,6 +13,7 @@ import signal
 import socket
 import hostlist
 import datetime
+import json
 from optparse import OptionParser
 import pkg_resources
 
@@ -143,6 +144,7 @@ class FlinkBootstrap(object):
             master_file2=open(os.path.join(WORKING_DIRECTORY, 'flink_master'), 'w')
             master_file2.write(master)
             master_file2.close()
+            self.master=master
 
             flink_conf_yaml_file = open(os.path.join(self.job_conf_dir, "flink-conf.yaml"), "w")
             flink_conf_yaml_file.write(self.get_flink_conf_yaml(master))
@@ -157,10 +159,12 @@ class FlinkBootstrap(object):
     def start_flink(self):
         logging.debug("Start Flink")
         self.set_env()
-        start_command = os.path.join(FLINK_HOME, "bin/start-cluster.sh")
-        logging.debug("Execute: %s"%start_command)
+        start_command = os.path.join(FLINK_HOME, "bin/start-cluster.sh &")
+        logging.debug("Execute with os: %s"%start_command)
         #os.system(". ~/.bashrc & " + start_command)
-        status = subprocess.call(start_command, shell=True)
+        os.system(start_command)
+        #status = subprocess.call(start_command, shell=True)
+        #status = subprocess.Popen(start_command, os.P_NOWAIT)
         print("Flink started, please set FLINK_CONF_DIR to:\nexport FLINK_CONF_DIR=%s"%self.job_conf_dir)
         
         
@@ -199,13 +203,19 @@ class FlinkBootstrap(object):
 
 
     def check_flink(self):
-        url = "http://" + self.master + ":8081"
-        matches = []
-        response = urllib.urlopen(url)
-        data = response.read()
-        matches=re.findall("(?<=>)worker-[0-9\\-.]*", data, re.DOTALL)
-        print matches
-        return matches
+        number_taskmanagers=0
+        try:
+            url = "http://" + self.master + ":8081/overview"
+            logging.debug("Check flink at: %s"%url)
+            response = urllib.urlopen(url)
+            data = response.read()
+            logging.debug(data)
+            dict_data = json.loads(data)
+            logging.debug(str(dict_data))
+            number_taskmanagers=dict_data["taskmanagers"]
+        except:
+            pass # REST Web Service not up yet
+        return number_taskmanagers
 
 #########################################################
 #  main                                                 #
@@ -260,12 +270,12 @@ if __name__ == "__main__" :
     flink = FlinkBootstrap(WORKING_DIRECTORY, FLINK_HOME)
     if options.start:
         flink.start()
-        #number_workers=0
-        #while number_workers!=number_nodes:
-        #    brokers=flink.check_flink()
-        #    number_workers=len(brokers)
-        #    logging.debug("Number workers: %d, number nodes: %d"%(number_workers,number_nodes))
-        #    time.sleep(1)
+        number_workers=0
+        while number_workers!=number_nodes:
+            number_taskmanagers=flink.check_flink()
+            number_workers=number_taskmanagers
+            logging.debug("Number workers: %d, number nodes: %d"%(number_workers,number_nodes))
+            time.sleep(1)
         end_start=time.time()
         performance_trace_file.write("startup,flink, %d, %.5f\n"%(number_nodes, (end_start-end_download)))
         performance_trace_file.flush()
