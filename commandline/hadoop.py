@@ -80,6 +80,7 @@ class SAGAHadoopCLI(object):
 
             while True:
                 state = myjob.get_state()
+                print "Job State: %s"%state
                 if state=="Running":
                     if os.path.exists(os.path.join(working_directory, "work/flink_started")):
                         self.get_flink_config_data(id, working_directory)
@@ -100,8 +101,10 @@ class SAGAHadoopCLI(object):
         flink_conf_dirs.sort(key=lambda x: os.path.getmtime(os.path.join(base_work_dir, x)),  reverse=True)
         if all == False: kafka_config_dirs=flink_conf_dirs[:1]
         flink_conf_dir = flink_conf_dirs[0]
-        master_file=os.path.join(flink_conf_dir, "conf/flink-conf.yaml")
-        #print master_file
+        flink_conf_dir_abspath = os.path.join(base_work_dir, flink_conf_dir)
+        #print str(flink_conf_dirs)
+        master_file = os.path.join(flink_conf_dir_abspath, "conf/flink-conf.yaml")
+        print "Checking file: " + master_file
         counter = 0
         while os.path.exists(master_file)==False and counter <600:
             time.sleep(1)
@@ -109,15 +112,14 @@ class SAGAHadoopCLI(object):
 
         with open(master_file, 'r') as f:
             master = f.read()
-        f.closed
 
-        print "FLINK installation directory: %s"%flink_conf_dir
+        jobmanager=re.search("(?<=jobmanager.rpc.address: )[ 0-9\\.]*", master, re.S).group(0)
+
+        print "Flink installation directory: %s"%flink_conf_dir_abspath
         print "(please allow some time until the Flink cluster is completely initialized)"
-        print "export PATH=%s/bin:$PATH"%(flink_conf_dir)
-        print "Flink Web URL: http://" + master + ":8081"
-        print "Flink Submit endpoint: spark://" + master + ":7077"
-
-
+        print "export PATH=%s/bin:$PATH"%(flink_conf_dir_abspath)
+        print "Flink Web URL: http://" + jobmanager + ":8081"
+        print "Flink Submit endpoint: spark://" + jobmanager + ":6123"
 
 
     ####################################################################################################################
@@ -294,7 +296,6 @@ class SAGAHadoopCLI(object):
 
         with open(master_file, 'r') as f:
             master = f.read()
-        f.closed
         print "SPARK installation directory: %s"%spark_home_path
         print "(please allow some time until the SPARK cluster is completely initialized)"
         print "export PATH=%s/bin:$PATH"%(spark_home_path)
