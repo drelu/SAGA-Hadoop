@@ -43,11 +43,11 @@ def handler(signum, frame):
 class FlinkBootstrap(object):
 
 
-    def __init__(self, working_directory, spark_home):
+    def __init__(self, working_directory, flink_home):
         self.working_directory=working_directory
-        self.jobid = "spark-conf-"+str(uuid.uuid1())
+        self.jobid = "flink-conf-"+str(uuid.uuid1())
         #self.job_working_directory = os.path.join(WORKING_DIRECTORY, self.jobid)
-        self.job_working_directory=spark_home
+        self.job_working_directory=flink_home
         self.job_conf_dir = os.path.join(self.job_working_directory, "conf")
         self.master="localhost"
 
@@ -132,14 +132,6 @@ class FlinkBootstrap(object):
 
     #################################################################################################################
     def configure_flink(self):
-        #logging.debug("Copy config from " + SPARK_CONF_DIR + " to: " + self.job_conf_dir)
-        #shutil.copytree(SPARK_CONF_DIR, self.job_conf_dir)
-        #if(os.environ.get("PBS_NODEFILE")!=None and os.environ.get("PBS_NODEFILE")!=""):
-        #    nodes=self.get_pbs_allocated_nodes()
-        #elif (os.environ.get("SLURM_NODELIST")!=None):
-        #    nodes=self.get_slurm_allocated_nodes()
-        #else:
-        #    nodes=self.get_sge_allocated_nodes() 
         nodes = self.get_nodelist_from_resourcemanager()
         if nodes!=None:
             #master = socket.gethostname().split(".")[0]
@@ -185,24 +177,24 @@ class FlinkBootstrap(object):
             self.configure_flink()
         else:
             logging.debug("Existing Flink Conf dir? %s"%os.environ["FLINK_CONF_DIR"])
-            self.job_conf_dir=os.environ["SPARK_CONF_DIR"]
+            self.job_conf_dir=os.environ["FLINK_CONF_DIR"]
 
         self.start_flink()
         
 
     def stop(self):
-        if os.environ.has_key("SPARK_CONF_DIR") and os.path.exists(os.environ["SPARK_CONF_DIR"])==True:
-            self.job_conf_dir=os.environ["SPARK_CONF_DIR"]
+        if os.environ.has_key("FLINK_CONF_DIR") and os.path.exists(os.environ["FLINK_CONF_DIR"])==True:
+            self.job_conf_dir=os.environ["FLINK_CONF_DIR"]
             self.job_log_dir=os.path.join(self.job_conf_dir, "../log")
         self.stop_flink()
 
 
     def set_env(self):
-        logging.debug("Export SPARK_CONF_DIR to %s"%self.job_conf_dir)
-        os.environ["SPARK_CONF_DIR"]=self.job_conf_dir
-        #os.environ["SPARK_MASTER_IP"]=socket.gethostname().split(".")[0]
-        os.environ["SPARK_MASTER_IP"]=socket.gethostbyname(socket.gethostname())
-        print "Spark conf dir: %s; MASTER_IP: %s"%(os.environ["SPARK_CONF_DIR"],os.environ["SPARK_MASTER_IP"])
+        logging.debug("Export FLINK_CONF_DIR to %s"%self.job_conf_dir)
+        os.environ["FLINK_CONF_DIR"]=self.job_conf_dir
+        #os.environ["FLINK_MASTER_IP"]=socket.gethostname().split(".")[0]
+        os.environ["FLINK_MASTER_IP"]=socket.gethostbyname(socket.gethostname())
+        print "Flink conf dir: %s; MASTER_IP: %s"%(os.environ["FLINK_CONF_DIR"],os.environ["FLINK_MASTER_IP"])
         os.system("pkill -9 java")
 
 
@@ -268,14 +260,14 @@ if __name__ == "__main__" :
     flink = FlinkBootstrap(WORKING_DIRECTORY, FLINK_HOME)
     if options.start:
         flink.start()
-        number_workers=0
-        while number_workers!=number_nodes:
-            brokers=flink.check_flink()
-            number_workers=len(brokers)
-            logging.debug("Number workers: %d, number nodes: %d"%(number_workers,number_nodes))
-            time.sleep(1)
+        #number_workers=0
+        #while number_workers!=number_nodes:
+        #    brokers=flink.check_flink()
+        #    number_workers=len(brokers)
+        #    logging.debug("Number workers: %d, number nodes: %d"%(number_workers,number_nodes))
+        #    time.sleep(1)
         end_start=time.time()
-        performance_trace_file.write("startup,spark, %d, %.5f\n"%(number_nodes, (end_start-end_download)))
+        performance_trace_file.write("startup,flink, %d, %.5f\n"%(number_nodes, (end_start-end_download)))
         performance_trace_file.flush()
     else:
         flink.stop()
