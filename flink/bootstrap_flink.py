@@ -14,42 +14,23 @@ import socket
 import hostlist
 import datetime
 from optparse import OptionParser
+import pkg_resources
+
 
 logging.basicConfig(level=logging.DEBUG)
 
 # For automatic Download and Installation
-VERSION="2.1.0"
-SPARK_DOWNLOAD_URL = "http://mirror.reverse.net/pub/apache/spark/spark-"+ VERSION + "/spark-" + VERSION+"-bin-hadoop2.6.tgz"
+VERSION="1.1.4"
+FLINK_DOWNLOAD_URL = "http://mirrors.sonic.net/apache/flink/flink-%s/flink-%s-bin-hadoop27-scala_2.11.tgz" % (VERSION, VERSION)
 WORKING_DIRECTORY = os.path.join(os.getcwd(), "work")
 
-# For using an existing installation
-#if not os.environ.has_key("SPARK_HOME"):
-SPARK_HOME=os.path.join(os.getcwd(), "work/", os.path.basename(SPARK_DOWNLOAD_URL).rpartition(".")[0])
-#else:
-# SPARK_HOME=os.environ["SPARK_HOME"]
+flink_directory = ("-").join(os.path.basename(FLINK_DOWNLOAD_URL).split("-")[:2])
+FLINK_HOME=os.path.join(os.getcwd(), "work/", flink_directory)
+print "Flink Home: %s"%FLINK_HOME
 
-SPARK_CONF_DIR=os.path.join(SPARK_HOME, "conf")
+FLINK_CONF_DIR=os.path.join(FLINK_HOME, "conf")
 
 STOP=False
-
-# Spark Configuration
-# https://spark.apache.org/docs/latest/spark-standalone.html
-#
-# SPARK_MASTER_IP	Bind the master to a specific IP address, for example a public one.
-# SPARK_MASTER_PORT	Start the master on a different port (default: 7077).
-# SPARK_MASTER_WEBUI_PORT	Port for the master web UI (default: 8080).
-# SPARK_MASTER_OPTS	Configuration properties that apply only to the master in the form "-Dx=y" (default: none). See below for a list of possible options.
-# SPARK_LOCAL_DIRS	Directory to use for "scratch" space in Spark, including map output files and RDDs that get stored on disk. This should be on a fast, local disk in your system. It can also be a comma-separated list of multiple directories on different disks.
-# SPARK_WORKER_CORES	Total number of cores to allow Spark applications to use on the machine (default: all available cores).
-# SPARK_WORKER_MEMORY	Total amount of memory to allow Spark applications to use on the machine, e.g. 1000m, 2g (default: total memory minus 1 GB); note that each application's individual memory is configured using its spark.executor.memory property.
-# SPARK_WORKER_PORT	Start the Spark worker on a specific port (default: random).
-# SPARK_WORKER_WEBUI_PORT	Port for the worker web UI (default: 8081).
-# SPARK_WORKER_INSTANCES	Number of worker instances to run on each machine (default: 1). You can make this more than 1 if you have have very large machines and would like multiple Spark worker processes. If you do set this, make sure to also set SPARK_WORKER_CORES explicitly to limit the cores per worker, or else each worker will try to use all the cores.
-# SPARK_WORKER_DIR	Directory to run applications in, which will include both logs and scratch space (default: SPARK_HOME/work).
-# SPARK_WORKER_OPTS	Configuration properties that apply only to the worker in the form "-Dx=y" (default: none). See below for a list of possible options.
-# SPARK_DAEMON_MEMORY	Memory to allocate to the Spark master and worker daemons themselves (default: 512m).
-# SPARK_DAEMON_JAVA_OPTS	JVM options for the Spark master and worker daemons themselves in the form "-Dx=y" (default: none).
-# SPARK_PUBLIC_DNS	The public DNS name of the Spark master and workers (default: none).
 
 
 def handler(signum, frame):
@@ -59,7 +40,7 @@ def handler(signum, frame):
 
     
 
-class SparkBootstrap(object):
+class FlinkBootstrap(object):
 
 
     def __init__(self, working_directory, spark_home):
@@ -131,16 +112,26 @@ class SparkBootstrap(object):
     @staticmethod
     def get_nodelist_from_resourcemanager():
         if (os.environ.get("PBS_NODEFILE") != None and os.environ.get("PBS_NODEFILE") != ""):
-            nodes = SparkBootstrap.get_pbs_allocated_nodes()
+            nodes = FlinkBootstrap.get_pbs_allocated_nodes()
         elif (os.environ.get("SLURM_NODELIST") != None):
-            nodes = SparkBootstrap.get_slurm_allocated_nodes()
+            nodes = FlinkBootstrap.get_slurm_allocated_nodes()
         else:
-            nodes = SparkBootstrap.get_sge_allocated_nodes()
+            nodes = FlinkBootstrap.get_sge_allocated_nodes()
         return nodes
 
 
+    def get_flink_conf_yaml(self, hostname):
+        module = "flink.configs.default"
+        print("Access config in module: " + module + " File: flink-conf.yaml")
+        my_data = pkg_resources.resource_string(module, "flink-conf.yaml")
+        my_data = my_data%(hostname)
+        my_data = os.path.expandvars(my_data)
+        return my_data
+
+
+
     #################################################################################################################
-    def configure_spark(self):
+    def configure_flink(self):
         #logging.debug("Copy config from " + SPARK_CONF_DIR + " to: " + self.job_conf_dir)
         #shutil.copytree(SPARK_CONF_DIR, self.job_conf_dir)
         #if(os.environ.get("PBS_NODEFILE")!=None and os.environ.get("PBS_NODEFILE")!=""):
@@ -157,50 +148,53 @@ class SparkBootstrap(object):
             master_file = open(os.path.join(self.job_conf_dir, "masters"), "w")
             master_file.write(master) 
             master_file.close()
-            master_file2=open(os.path.join(WORKING_DIRECTORY, 'spark_master'), 'w')
+            master_file2=open(os.path.join(WORKING_DIRECTORY, 'flink_master'), 'w')
             master_file2.write(master)
-            master_file2.close()    
+            master_file2.close()
 
+            flink_conf_yaml_file = open(os.path.join(self.job_conf_dir, "flink-conf.yaml"), "w")
+            flink_conf_yaml_file.write(self.get_flink_conf_yaml(master))
+            flink_conf_yaml_file.close()
 
             slave_file = open(os.path.join(self.job_conf_dir, "slaves"), "w")
             slave_file.writelines(nodes) 
             slave_file.close()
-            logging.debug("Spark cluster nodes: " + str(nodes))
+            logging.debug("Flink cluster nodes: " + str(nodes))
 
 
-    def start_spark(self):
-        logging.debug("Start Spark")
+    def start_flink(self):
+        logging.debug("Start Flink")
         self.set_env()
-        start_command = os.path.join(SPARK_HOME, "sbin/start-all.sh")
+        start_command = os.path.join(FLINK_HOME, "bin/start-cluster.sh")
         logging.debug("Execute: %s"%start_command)
         #os.system(". ~/.bashrc & " + start_command)
         status = subprocess.call(start_command, shell=True)
-        print("SPARK started, please set SPARK_CONF_DIR to:\nexport SPARK_CONF_DIR=%s"%self.job_conf_dir)
+        print("Flink started, please set FLINK_CONF_DIR to:\nexport FLINK_CONF_DIR=%s"%self.job_conf_dir)
         
         
-    def stop_spark(self):
-        logging.debug("Stop Spark")
+    def stop_flink(self):
+        logging.debug("Stop Flink")
         self.set_env() 
-        stop_command = os.path.join(SPARK_HOME, "sbin/stop-all.sh")
+        stop_command = os.path.join(FLINK_HOME, "bin/stop-all.sh")
         logging.debug("Execute: %s"%stop_command)
         os.system(stop_command)
     
     
     def start(self):
-        if not os.environ.has_key("SPARK_CONF_DIR") or os.path.exists(os.environ["SPARK_CONF_DIR"])==False:
-            self.configure_spark()
+        if not os.environ.has_key("FLINK_CONF_DIR") or os.path.exists(os.environ["FLINK_CONF_DIR"])==False:
+            self.configure_flink()
         else:
-            logging.debug("Existing SPARK Conf dir? %s"%os.environ["SPARK_CONF_DIR"])
+            logging.debug("Existing Flink Conf dir? %s"%os.environ["FLINK_CONF_DIR"])
             self.job_conf_dir=os.environ["SPARK_CONF_DIR"]
 
-        self.start_spark()
+        self.start_flink()
         
 
     def stop(self):
         if os.environ.has_key("SPARK_CONF_DIR") and os.path.exists(os.environ["SPARK_CONF_DIR"])==True:
             self.job_conf_dir=os.environ["SPARK_CONF_DIR"]
             self.job_log_dir=os.path.join(self.job_conf_dir, "../log")
-        self.stop_spark()
+        self.stop_flink()
 
 
     def set_env(self):
@@ -211,8 +205,9 @@ class SparkBootstrap(object):
         print "Spark conf dir: %s; MASTER_IP: %s"%(os.environ["SPARK_CONF_DIR"],os.environ["SPARK_MASTER_IP"])
         os.system("pkill -9 java")
 
-    def check_spark(self):
-        url = "http://" + self.master + ":8080"
+
+    def check_flink(self):
+        url = "http://" + self.master + ":8081"
         matches = []
         response = urllib.urlopen(url)
         data = response.read()
@@ -232,51 +227,50 @@ if __name__ == "__main__" :
 
     parser = OptionParser()
     parser.add_option("-s", "--start", action="store_true", dest="start",
-                  help="start Spark", default=True)
+                  help="start Flink", default=True)
     parser.add_option("-q", "--quit", action="store_false", dest="start",
-                  help="terminate Spark")
+                  help="terminate Flink")
 
-    logging.debug("Bootstrap SPARK on " + socket.gethostname())
-    node_list = SparkBootstrap.get_nodelist_from_resourcemanager()
+    logging.debug("Bootstrap Flink on " + socket.gethostname())
+    node_list = FlinkBootstrap.get_nodelist_from_resourcemanager()
     number_nodes = len(node_list)
     print "nodes: %s"%str(node_list)
 
+    try:
+        os.makedirs(WORKING_DIRECTORY)
+    except:
+        pass
+
     run_timestamp=datetime.datetime.now()
-    performance_trace_filename = "spark_performance_" + run_timestamp.strftime("%Y%m%d-%H%M%S") + ".csv"
+    performance_trace_filename = "flink_performance_" + run_timestamp.strftime("%Y%m%d-%H%M%S") + ".csv"
     performance_trace_file = open(os.path.join(WORKING_DIRECTORY, performance_trace_filename), "a")
     start = time.time()
 
  
-    if not os.path.exists(SPARK_HOME):
-        try:
-            os.makedirs(WORKING_DIRECTORY)
-        except:
-            pass
-        
-
-        download_destination = os.path.join(WORKING_DIRECTORY,"spark.tar.gz")
+    if not os.path.exists(FLINK_HOME):
+        download_destination = os.path.join(WORKING_DIRECTORY,"flink.tar.gz")
         if os.path.exists(download_destination)==False:
-            logging.debug("Download: %s to %s"%(SPARK_DOWNLOAD_URL, download_destination))
+            logging.debug("Download: %s to %s" % (FLINK_DOWNLOAD_URL, download_destination))
             opener = urllib.FancyURLopener({})
-            opener.retrieve(SPARK_DOWNLOAD_URL, download_destination);
+            opener.retrieve(FLINK_DOWNLOAD_URL, download_destination);
         else:
-            logging.debug("Found existing SPARK binaries at: " + download_destination)
-        logging.debug("Install SPARK " + VERSION)
+            logging.debug("Found existing Flink binaries at: " + download_destination)
+        logging.debug("Install Flink " + VERSION)
 
         os.chdir(WORKING_DIRECTORY)
-        os.system("tar -xzf spark.tar.gz")
+        os.system("tar -xzf flink.tar.gz")
 
     end_download = time.time() 
-    performance_trace_file.write("download,spark, %d, %.5f\n"%(number_nodes, end_download-start))
+    performance_trace_file.write("download,flink, %d, %.5f\n"%(number_nodes, end_download-start))
     performance_trace_file.flush() 
     (options, args) = parser.parse_args()
     
-    spark = SparkBootstrap(WORKING_DIRECTORY, SPARK_HOME)
+    flink = FlinkBootstrap(WORKING_DIRECTORY, FLINK_HOME)
     if options.start:
-        spark.start()
+        flink.start()
         number_workers=0
         while number_workers!=number_nodes:
-            brokers=spark.check_spark()
+            brokers=flink.check_flink()
             number_workers=len(brokers)
             logging.debug("Number workers: %d, number nodes: %d"%(number_workers,number_nodes))
             time.sleep(1)
@@ -284,23 +278,23 @@ if __name__ == "__main__" :
         performance_trace_file.write("startup,spark, %d, %.5f\n"%(number_nodes, (end_start-end_download)))
         performance_trace_file.flush()
     else:
-        spark.stop()
+        flink.stop()
         if options.clean:
             directory = "/tmp/hadoop-"+os.getlogin()
             logging.debug("delete: " + directory)
             shutil.rmtree(directory)
         sys.exit(0)
     
-    print "Finished launching of SPARK Cluster - Sleeping now"
-    f = open(os.path.join(WORKING_DIRECTORY, 'spark_started'), 'w')
+    print "Finished launching of Flink Cluster - Sleeping now"
+    f = open(os.path.join(WORKING_DIRECTORY, 'flink_started'), 'w')
     f.close()
 
     while STOP==False:
         logging.debug("stop: " + str(STOP))
         time.sleep(10)
             
-    spark.stop()
-    os.remove(os.path.join(WORKING_DIRECTORY, "started"))
+    flink.stop()
+    os.remove(os.path.join(WORKING_DIRECTORY, "flink_started"))
         
         
     

@@ -26,6 +26,100 @@ class SAGAHadoopCLI(object):
         self.pilots = []
         self.__restore()
 
+
+    ####################################################################################################################
+    # Flink 1.1.4
+    def submit_flink_job(self,
+                         resource_url="fork://localhost",
+                         working_directory=os.getcwd(),
+                         number_cores=1,
+                         cores_per_node=1,
+                         spmd_variation=None,
+                         queue=None,
+                         walltime=None,
+                         project=None,
+                         config_name="default"
+                         ):
+
+        try:
+            # create a job service for Futuregrid's 'india' PBS cluster
+            js = saga.job.Service(resource_url)
+            # describe our job
+            jd = saga.job.Description()
+            # resource requirements
+            jd.total_cpu_count = int(number_cores)
+            # environment, executable & arguments
+            executable = "python"
+            arguments = ["-m", "flink.bootstrap_flink"]
+            logging.debug("Run %s Args: %s"%(executable, str(arguments)))
+            jd.executable  = executable
+            jd.arguments   = arguments
+            # output options
+            jd.output =  os.path.join("flink_job.stdout")
+            jd.error  = os.path.join("flink_job.stderr")
+            jd.working_directory=working_directory
+            jd.queue=queue
+            if project!=None:
+                jd.project=project
+            #jd.environment =
+            if spmd_variation!=None:
+                jd.spmd_variation=spmd_variation
+            if walltime!=None:
+                jd.wall_time_limit=walltime
+
+            # create the job (state: New)
+            myjob = js.create_job(jd)
+
+            #print "Starting Spark bootstrap job ..."
+            # run the job (submit the job to PBS)
+            myjob.run()
+            id = myjob.get_id()
+            #id = id[id.index("]-[")+3: len(id)-1]
+            #print "**** Job: " + str(id) + " State : %s" % (myjob.get_state())
+            #print "Wait for Spark Cluster to startup. File: %s" % (os.path.join(working_directory, "work/spark_started"))
+
+            while True:
+                state = myjob.get_state()
+                if state=="Running":
+                    if os.path.exists(os.path.join(working_directory, "work/flink_started")):
+                        self.get_flink_config_data(id, working_directory)
+                        break
+                elif state == "Failed":
+                    break
+                time.sleep(3)
+            return myjob
+
+        except Exception as ex:
+            print "An error occurred: %s" % (str(ex))
+
+
+    def get_flink_config_data(self, jobid, working_directory=None):
+        base_work_dir = os.path.join(working_directory, "work")
+        flink_conf_dirs = [i if os.path.isdir(os.path.join(base_work_dir,i)) and i.find("flink-")>=0 else None for i in os.listdir(base_work_dir)]
+        flink_conf_dirs = filter(lambda a: a != None, flink_conf_dirs)
+        flink_conf_dirs.sort(key=lambda x: os.path.getmtime(os.path.join(base_work_dir, x)),  reverse=True)
+        if all == False: kafka_config_dirs=flink_conf_dirs[:1]
+        flink_conf_dir = flink_conf_dirs[0]
+        master_file=os.path.join(flink_conf_dir, "conf/flink-conf.yaml")
+        #print master_file
+        counter = 0
+        while os.path.exists(master_file)==False and counter <600:
+            time.sleep(1)
+            counter = counter + 1
+
+        with open(master_file, 'r') as f:
+            master = f.read()
+        f.closed
+
+        print "FLINK installation directory: %s"%flink_conf_dir
+        print "(please allow some time until the Flink cluster is completely initialized)"
+        print "export PATH=%s/bin:$PATH"%(flink_conf_dir)
+        print "Flink Web URL: http://" + master + ":8081"
+        print "Flink Submit endpoint: spark://" + master + ":7077"
+
+
+
+
     ####################################################################################################################
     # Kafka 0.10
     def submit_kafka_job(self,
@@ -384,13 +478,11 @@ def main():
     saga_hadoop_group.add_argument('--cores_per_node',  default="1", nargs="?")    
     saga_hadoop_group.add_argument('--project', action="store", nargs="?", metavar="PROJECT", help="Allocation id for project", default=None)
 
-    saga_hadoop_group.add_argument('--framework', action="store", nargs="?", metavar="FRAMEWORK", help="Framework to start: [hadoop, spark, kafka]", default="hadoop")
+    saga_hadoop_group.add_argument('--framework', action="store", nargs="?", metavar="FRAMEWORK", help="Framework to start: [hadoop, spark, kafka, flink]", default="hadoop")
     saga_hadoop_group.add_argument("-n", "--config_name", action="store", nargs="?", metavar="CONFIG_NAME", help="Name of config for host", default="default")
 
     parsed_arguments = parser.parse_args()    
-    
-    
-    
+
     if parsed_arguments.version==True:
         app.version()
     elif parsed_arguments.framework=="kafka":
@@ -413,6 +505,16 @@ def main():
                               walltime=parsed_arguments.walltime,
                               project=parsed_arguments.project,
                               config_name=parsed_arguments.config_name)
+    elif parsed_arguments.framework=="flink":
+        app.submit_flink_job(resource_url=parsed_arguments.resource,
+                             working_directory=parsed_arguments.working_directory,
+                             number_cores=parsed_arguments.number_cores,
+                             cores_per_node=parsed_arguments.cores_per_node,
+                             spmd_variation=parsed_arguments.spmd_variation,
+                             queue=parsed_arguments.queue,
+                             walltime=parsed_arguments.walltime,
+                             project=parsed_arguments.project,
+                             config_name=parsed_arguments.config_name)
     else:
         app.submit_hadoop_job(resource_url=parsed_arguments.resource, 
                               working_directory=parsed_arguments.working_directory, 
