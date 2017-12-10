@@ -1,6 +1,6 @@
 # SAGA Hadoop
 
-Last Updated: 10/01/2016
+Last Updated: 12/09/2017
 
 # Overview:
 
@@ -20,12 +20,19 @@ Requirements:
 
 By default SAGA-Hadoop deploys an Hadoop 2.2.0 YARN cluster. The cluster can be customized by adjusting the templates for the Hadoop configuration files in `core-site.xml`, `hdfs-site.xml`, `mapred-site.xml` and `yarn-site.xml` in the `hadoop2/bootstrap_hadoop2.py`.
 
+
+
 # Usage
 
+Requirement:
+    
+    pip install pykafka saga-python
 
 Try to run a local Hadoop (e.g. for development and testing)
-
-    easy_install saga-hadoop
+	
+	
+	
+    pip install saga-hadoop
     saga-hadoop --resource fork://localhost
     
     
