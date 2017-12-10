@@ -82,7 +82,7 @@ setup(name='SAGA-Hadoop',
 
       # data files for easy_install
       package_data= {'': ['*.xml', '*.yaml', '*.properties']},
-      install_requires=['uuid', 'radical.utils', 'saga-python', 'argparse', "python-hostlist", "setuptools-git" ],
+      install_requires=['uuid', 'radical.utils', 'saga-python', 'pykafka', 'argparse', "python-hostlist", "setuptools-git" ],
       entry_points = {
         'console_scripts': [ 'saga-hadoop=commandline.hadoop:main']        
       }
