@@ -19,7 +19,9 @@ from pykafka import KafkaClient
 logging.basicConfig(level=logging.DEBUG)
 
 # For automatic Download and Installation
-VERSION="0.10.1.0"
+#VERSION="0.10.1.0"
+VERSION="1.0.0"
+#KAFKA_DOWNLOAD_URL = "http://www-us.apache.org/dist/kafka/" + VERSION + "/kafka_2.11-" + VERSION + ".tgz"
 KAFKA_DOWNLOAD_URL = "http://www-us.apache.org/dist/kafka/" + VERSION + "/kafka_2.11-" + VERSION + ".tgz"
 WORKING_DIRECTORY = os.path.join(os.getcwd(), "work")
 
