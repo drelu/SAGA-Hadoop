@@ -32,7 +32,7 @@ KAFKA_CONF_DIR=os.path.join(KAFKA_HOME, "etc")
 STOP=False
 
 def handler(signum, frame):
-    logging.debug("Signal catched. Stop Hadoop")
+    logging.debug("Signal catched. Stop Kafka")
     global STOP
     STOP=True
     
