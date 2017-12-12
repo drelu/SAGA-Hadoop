@@ -235,6 +235,10 @@ if __name__ == "__main__" :
     run_timestamp=datetime.datetime.now()
     performance_trace_filename = "kafka_performance_" + run_timestamp.strftime("%Y%m%d-%H%M%S") + ".csv"
     kafka_config_filename = "kafka_config_" + run_timestamp.strftime("%Y%m%d-%H%M%S")  
+    try:
+        os.makedirs(WORKING_DIRECTORY)
+    except:
+        pass
     performance_trace_file = open(os.path.join(WORKING_DIRECTORY, performance_trace_filename), "a")
     start = time.time()
     #performance_trace_file.write("start_time, %.5f"%(time.time()))
