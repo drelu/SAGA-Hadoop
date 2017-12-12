@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-""" Spark Bootstrap Script (based on Spark 1.2 release) """
+""" Flink Bootstrap Script (based on Spark 1.1 release) """
 import os, sys
 import pdb
 import urllib

@@ -137,6 +137,8 @@ class DaskBootstrap():
         self.nodes = self.get_nodelist_from_resourcemanager()
         logging.debug("Dask nodes: " + str(self.nodes))
         self.master = socket.gethostname().split(".")[0]
+        with open(os.path.join(WORKING_DIRECTORY, "dask_scheduler")) as master_file:
+            master_file.write(self.master+":8686")
 
 
 
@@ -147,12 +149,8 @@ class DaskBootstrap():
         time.sleep(5)
         command = "dask-ssh %s"%(" ".join(self.nodes))
         logging.debug("Start Dask Cluster" + command)
-
         #status = subprocess.call(command, shell=True)
-
         self.dask_process = subprocess.Popen(command, shell=True)
-
-
         print("Dask started.")
 
 

@@ -28,6 +28,88 @@ class SAGAHadoopCLI(object):
 
 
     ####################################################################################################################
+    # Dask Distributed 1.20.2
+
+    def submit_dask_job(self,
+                         resource_url="fork://localhost",
+                         working_directory=os.getcwd(),
+                         number_cores=1,
+                         cores_per_node=1,
+                         spmd_variation=None,
+                         queue=None,
+                         walltime=None,
+                         project=None,
+                         config_name="default"
+                         ):
+
+        try:
+            # create a job service for Futuregrid's 'india' PBS cluster
+            js = saga.job.Service(resource_url)
+            # describe our job
+            jd = saga.job.Description()
+            # resource requirements
+            jd.total_cpu_count = int(number_cores)
+            # environment, executable & arguments
+            executable = "python"
+            arguments = ["-m", "dask.bootstrap_dask"]
+            logging.debug("Run %s Args: %s" % (executable, str(arguments)))
+            jd.executable = executable
+            jd.arguments = arguments
+            # output options
+            jd.output = os.path.join("dask_job.stdout")
+            jd.error = os.path.join("dask_job.stderr")
+            jd.working_directory = working_directory
+            jd.queue = queue
+            if project != None:
+                jd.project = project
+            # jd.environment =
+            if spmd_variation != None:
+                jd.spmd_variation = spmd_variation
+            if walltime != None:
+                jd.wall_time_limit = walltime
+
+            # create the job (state: New)
+            myjob = js.create_job(jd)
+
+            # print "Starting Spark bootstrap job ..."
+            # run the job (submit the job to PBS)
+            myjob.run()
+            id = myjob.get_id()
+            # id = id[id.index("]-[")+3: len(id)-1]
+            # print "**** Job: " + str(id) + " State : %s" % (myjob.get_state())
+            # print "Wait for Spark Cluster to startup. File: %s" % (os.path.join(working_directory, "work/spark_started"))
+
+            while True:
+                state = myjob.get_state()
+                print "Job State: %s" % state
+                if state == "Running":
+                    if os.path.exists(os.path.join(working_directory, "work/dask_started")):
+                        self.get_flink_config_data(id, working_directory)
+                        break
+                elif state == "Failed":
+                    break
+                time.sleep(3)
+            return myjob
+
+        except Exception as ex:
+            print "An error occurred: %s" % (str(ex))
+
+    def get_dask_config_data(self, jobid, working_directory=None):
+        master_file = os.path.join(working_directory, "dask_scheduler")
+        start_file = os.path.join(working_directory, "dask_started")
+        # print master_file
+        counter = 0
+        while not os.path.exists(master_file) and not os.path.exits(start_file) and counter < 600:
+            time.sleep(2)
+            counter = counter + 1
+
+        with open(master_file, 'r') as f:
+            master = f.read()
+
+        print "Dask Scheduler: tcp//" + master
+
+
+    ####################################################################################################################
     # Flink 1.1.4
     def submit_flink_job(self,
                          resource_url="fork://localhost",
@@ -119,11 +201,11 @@ class SAGAHadoopCLI(object):
         print "(please allow some time until the Flink cluster is completely initialized)"
         print "export PATH=%s/bin:$PATH"%(flink_conf_dir_abspath)
         print "Flink Web URL: http://" + jobmanager + ":8081"
-        print "Flink Submit endpoint: spark://" + jobmanager + ":6123"
+        print "Flink Submit endpoint: http://" + jobmanager + ":6123"
 
 
     ####################################################################################################################
-    # Kafka 0.10
+    # Kafka 1.0.0
     def submit_kafka_job(self,
                          resource_url="fork://localhost",
                          working_directory=os.getcwd(),
@@ -508,6 +590,16 @@ def main():
                               config_name=parsed_arguments.config_name)
     elif parsed_arguments.framework=="flink":
         app.submit_flink_job(resource_url=parsed_arguments.resource,
+                             working_directory=parsed_arguments.working_directory,
+                             number_cores=parsed_arguments.number_cores,
+                             cores_per_node=parsed_arguments.cores_per_node,
+                             spmd_variation=parsed_arguments.spmd_variation,
+                             queue=parsed_arguments.queue,
+                             walltime=parsed_arguments.walltime,
+                             project=parsed_arguments.project,
+                             config_name=parsed_arguments.config_name)
+    elif parsed_arguments.framework=="dask":
+        app.submit_dask_job(resource_url=parsed_arguments.resource,
                              working_directory=parsed_arguments.working_directory,
                              number_cores=parsed_arguments.number_cores,
                              cores_per_node=parsed_arguments.cores_per_node,

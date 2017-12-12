@@ -51,9 +51,13 @@ see `hadoop1` for setting up a Hadoop 1.x.x cluster
 
 see `hadoop2` for setting up a Hadoop 2.7.x cluster
  
-see `spark` for setting up a Spark 2.0.x cluster
+see `spark` for setting up a Spark 2.2.x cluster
 
-see `kafka` for setting up a Kafka 0.10.x cluster
+see `kafka` for setting up a Kafka 1.0.x cluster
+
+see `flink` for setting up a Flink 1.1.4 cluster
+
+see `dask` for setting up a Dask Distributed 1.20.2 cluster
 
 
 # Examples:
